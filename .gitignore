@@ -1,3 +1,14 @@
+# Directories
+/other
+/references
+/analysis
+/figures
+
+# Files
+*.txt
+*.docx
+*.html
+
 # History files
 .Rhistory
 .Rapp.history
