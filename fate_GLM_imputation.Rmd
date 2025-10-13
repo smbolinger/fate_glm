@@ -13,20 +13,11 @@ output: html_document
 ```{r, warning=FALSE}
 ###  to perform the multiple imputations ###############################################
 
-# impRes <- impDat %>%
-#   select(nest, nest_age, obs_int, cam_fate, fdate, species, HF_mis, misclass, is_u) %>%
-#   # runImpMods(.,modList=modList,resp="is_u")
-#   runImpMods(.,modList=modList,regMethod = impMet,resp=resp, pool=FALSE, impute=FALSE)
-# summary(impRes)
-# impRes
-
-# all of this is what is inside the function
-# impDat1 is the result of get(datNameImp)
-
 imputeDat <- function(impDat1, m = 10, return = "complete"){
   
   # impDat1 <- get(datNameImp)
-  impDat  <- mice::mice(impDat1, seed=613, m=m, printFlag=FALSE)
+  # impDat  <- mice::mice(impDat1, seed=613, m=m, printFlag=FALSE)
+  impDat  <- mice::mice(impDat1, seed=613, method="rf", m=m, printFlag=FALSE)
   impDat2 <- mice::complete(impDat, "all") # generate a list of all the completed datasets
   
   print(plot(impDat))
@@ -67,15 +58,10 @@ poolImp <- function(impMod, modList){
   }
   return(impModPool)
 }
-# dat <- impDat
-# modnum=top_num
-# plot_type = "pred"
-# # if(grepl("*", modList[top_num], fixed=TRUE)){
-# vars = c(intVar1, intVar2)
-# y_lab="e"
-# x_lab="jjkjk"
-# grid1 <- intGridObs
+```
 
+
+```{r, warning=FALSE}
 # create the interaction plots
 grpColor <- c(LETE="#AA4499", CONI="#44AA99")
 intPlot <- function(dat, 
@@ -196,25 +182,8 @@ intPlot <- function(dat,
 ```{r, warning=FALSE}
 # top_num <- aicTabImp$num[1]
 # regtab <- function(aicTabImp, modList, howManyMod){
-regtab <- function(aicTabImp, modList){
+regtab <- function(impDat, aicTabImp, modList){
   # browser()
-  # top_num <- as.numeric(rownames(aicTabImp)[1])
-  # # sec_top <- aicTabImp$num[2]
-  # sec_top <- as.numeric(rownames(aicTabImp)[2])
-  # th_top  <- as.numeric(rownames(aicTabImp)[3])
-  # 
-  # cat("top model:", modList[top_num])
-  # intVar1 <- str_extract(string = modList[top_num], pattern = "\\w+(?=\\s\\*)")
-  # intVar2 <- str_extract(string = modList[top_num], pattern = "(?<=\\*\\s)\\w+")
-  # cat("\ninteraction variables:", intVar1, intVar2)
-  # 
-  # cat("\n\nsecond best model:", modList[sec_top])
-  # intVar1.2 <- str_extract(string = modList[sec_top], pattern = "\\w+(?=\\s\\*)")
-  # intVar2.2 <- str_extract(string = modList[sec_top], pattern = "(?<=\\*\\s)\\w+")
-  # cat("\ninteraction variables:", intVar1.2, intVar2.2)
-  # cat("\ndelta AIC of second best model:", aicTabImp$deltaAIC[2])
-  
-  # cat("\n\ncreating regression table for top model, model number", top_num, "; \nmodel formula:", paste(modList[top_num]))
   
     modnum  <- as.numeric(rownames(aicTabImp)[m])
     # NOTE - will change based on whether there is a space in the modname
@@ -246,7 +215,7 @@ regtab <- function(aicTabImp, modList){
   # impTab <- impModTab(impModPool = impRes,modList = modList)
 ```
 
-Functions to create interaction plots:
+#### Functions to create interaction plots:
 
 ```{r}
 
@@ -318,7 +287,6 @@ Then drop species from the dataset
 FOr this to work, need to rewrite the models in terms of the new interaction variable.
 
 ```{r, warning=FALSE}
-
 # change CI comma to a dash - now this is in the main script at the beginning
 # from https://stackoverflow.com/questions/75637034/insert-dash-in-confidence-interval-instead-of-comma-in-r-gtsummary
 # my_theme <-
@@ -327,33 +295,41 @@ FOr this to work, need to rewrite the models in terms of the new interaction var
 #   )
 # 
 # set_gtsummary_theme(my_theme)
+col_sel <- c(prVars, resp) # columns to select, as strings
 
-get(datNameImp) %>% select(species, cam_fate, fdate, obs_int, nest_age) %>% mice::md.pattern()
+# dat4imp <- get(datNameImp) %>% select(all_of(col_sel)) %>% naniar::bind_shadow() 
+dat4imp <- get(datNameImp) %>% select(all_of(col_sel))
+d4i_shadow <- naniar::as_shadow(dat4imp)
+# %>% mice::md.pattern()
+```
 
-# interaction with obs_int
-imppDat1 <- get(datNameImp) %>% 
-  mutate(species = as.numeric(species=="LETE"),
-         sp_obsInt = species * obs_int) %>% 
-  # select(species, cam_fate, fdate, nest_age, obs_int) 
-  select(species, obs_int, cam_fate, fdate, nest_age, sp_obsInt) 
 
-imppDat2 <- get(datNameImp) %>% 
-  mutate(species = as.numeric(species=="LETE"),
-         sp_age = species * nest_age) %>% 
-  # select(species, cam_fate, fdate, nest_age, obs_int) 
-  select(species, obs_int, cam_fate, fdate, nest_age, sp_age) 
-# impDat       <- imputeDat(impDat1 = imppDat, m=100, return="")
-# impDat2 <- impDat
-# impDat  <- mice::mice(imppDat, seed=613, m=100, printFlag=FALSE)
-# impDat  <- mice::mice(imppDat, seed=613, m=30, printFlag=FALSE)
-impDat1  <- mice::mice(imppDat1, seed=613, m=30, printFlag=FALSE)
-impDat2  <- mice::mice(imppDat2, seed=613, m=30, printFlag=FALSE)
-
-impDat1$predictorMatrix
-impDat2$predictorMatrix
-# May actually only require 25 imputations, but that will change all the numbers slightly (AIC
-# rankings stay the same)
-# impDat  <- mice::mice(imppDat, seed=613, m=25, printFlag=FALSE)
+```{r eval=FALSE, warning=FALSE, include=FALSE}
+# # interaction with obs_int
+# # imppDat1 <- get(datNameImp) %>% 
+# imppDat1 <- dat4imp %>% 
+#   mutate(species = as.numeric(species=="LETE"),
+#          sp_obsInt = species * obs_int) %>% 
+#   # select(species, cam_fate, fdate, nest_age, obs_int) 
+#   select(species, obs_int, cam_fate, fdate, nest_age, sp_obsInt) 
+# 
+# imppDat2 <- dat4imp %>% 
+#   mutate(species = as.numeric(species=="LETE"),
+#          sp_age = species * nest_age) %>% 
+#   # select(species, cam_fate, fdate, nest_age, obs_int) 
+#   select(species, obs_int, cam_fate, fdate, nest_age, sp_age) 
+# # impDat  <- imputeDat(impDat1 = imppDat, m=100, return="")
+# # impDat2 <- impDat
+# # impDat  <- mice::mice(imppDat, seed=613, m=100, printFlag=FALSE)
+# # impDat  <- mice::mice(imppDat, seed=613, m=30, printFlag=FALSE)
+# impDat1  <- mice::mice(imppDat1, seed=613, m=30, method="rf", printFlag=FALSE)
+# impDat2  <- mice::mice(imppDat2, seed=613, m=30, method="rf", printFlag=FALSE)
+# 
+# impDat1$predictorMatrix
+# impDat2$predictorMatrix
+# # May actually only require 25 imputations, but that will change all the numbers slightly (AIC
+# # rankings stay the same)
+# # impDat  <- mice::mice(imppDat, seed=613, m=25, printFlag=FALSE)
 ```
 
 ### Stratification
@@ -365,12 +341,13 @@ Impute separately for each species (each level of categorical var) and then comb
 ```{r}
 col_sel <- c(prVars, resp) # columns to select, as strings
 datLT <- get(datNameImp) %>% filter(species=="LETE") %>% select(all_of(col_sel))
-impLT <- mice::mice(datLT, seed=613, m=30, printFlag=FALSE)
+impLT <- mice::mice(datLT, seed=613, m=30, method="rf", printFlag=FALSE)
 
 datCO <- get(datNameImp) %>% filter(species=="CONI") %>% select(all_of(col_sel))
-impCO <- mice::mice(datCO, seed=613, m=30, printFlag=FALSE)
+impCO <- mice::mice(datCO, seed=613, m=30,method="rf", printFlag=FALSE)
 
-impInt <- rbind(impLT, impCO)
+# impInt <- mice::cbind(impLT, impCO)
+impInt <- mice::rbind(impLT, impCO)
 ```
 
 ## .
@@ -406,7 +383,9 @@ Depends on response variable - must run each time you change it
 
 ```{r, warning=FALSE}
 # uses the response specified in fate_GLM1.Rmd
-impMod       <- impFit(impDat = impDat, modList = modList)
+# impDat <- mice::cbind(impDat1, impDat2)
+# impMod       <- impFit(impDat = impDat, modList = modList)
+impMod       <- impFit(impDat = impInt, modList = modList)
 impModPool   <- poolImp(impMod = impMod, modList= modList)
 ```
 
@@ -461,9 +440,9 @@ knitr::include_graphics(paste0("analysis/",aicImp),
 ### Create the regression table(s) for the top model(s):
 
 ```{r, warning=FALSE}
-howManyMod = 3
+howManyMod = 4
 for(m in 1:howManyMod){
-  tab <- regtab(aicTabImp, modList)
+  tab <- regtab(impInt, aicTabImp, modList)
   
 }
 ```
@@ -668,7 +647,7 @@ pl
 # try not using the function at all
 
 # grid1 <- intGridAge
-modnum <- 5
+modnum <- 10
 dat <- impDat
 vars <- c("species", "nest_age")
 y_lab="Predicted Probability of \nMisclassification"
@@ -775,7 +754,7 @@ pl
 #           x_lab="Final interval - centered (days)",
 #           y_lab="Predicted probability of \nmisclassification")
 # pl2
-modnum <- 4
+modnum <-10 
 dat <- impDat
 vars <- c("species", "obs_int")
 y_lab="Predicted Probability of \nMisclassification"

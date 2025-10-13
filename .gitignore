@@ -8,6 +8,7 @@
 *.txt
 *.docx
 *.html
+*.rds
 
 # History files
 .Rhistory
