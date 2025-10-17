@@ -103,79 +103,8 @@ set_gtsummary_theme(my_theme)
 
 
 ```{r filter-function, echo=TRUE}
-filter_dat1 <- function(nestData, sites=c("RUTE","RUTW"), spp=c("LETE","CONI"),
-                        # cam_nest=TRUE,
-                        cam_vect=c("Y","y"),  debug=FALSE, grouped=FALSE){
-  # cam_str <- c("Y","y")
-  # if (all_cam) cam_str <- c("Y","y","Y*")
-  if (debug) cat("camera strings:", cam_vect,"\n\n")
-  ndGLM <- nestData %>%
-
-    # mutate(fdate=final_obs_date) %>%    # this is also done later?
-    mutate(
-      fate = case_match(field_fate,
-                                   "H"   ~ 1,
-                                   "F"   ~ 0,
-                                   "D"   ~ 2,
-                                   "S"   ~ 3,
-                                   "A"   ~ 4,
-                                   "Hu"  ~ 5,
-                                   "Ca"  ~ 6,
-                                   "U"   ~ 7,
-                                   "U?"  ~ 7,
-                                   "U-H" ~ 8,
-                                   "U-F" ~ 9
-           ),
-
-           cfate = case_match(cam_fate,
-                                 "H"  ~ 1,
-                                 "F"  ~ 0,
-                                 "D"  ~ 2,
-                                 "S"  ~ 3,
-                                 "A"  ~ 4,
-                                 "Hu" ~ 5,
-                                 "Ca" ~ 6,
-                                 "U"  ~ 7
-           ),
-           camera = ifelse(camera %in% cam_vect, TRUE, FALSE)
-
-    ) %>%
-
-    filter(site %in% sites) %>%
-    # filter(species %in% c("CONI", "LETE")) %>%
-    filter(species %in% spp) %>%
-    filter(camera == TRUE)
-
-  if(grouped==F){
-    ndGLM <- ndGLM %>%
-    group_by(nest)  %>%
-    summarize(status = list(status),
-              across(where(is.integer), last), # now they are all chr
-              across(where(is.numeric), last),
-              across(where(is.character), last) # summarize already goes rowwise
-    ) %>%
-    rowwise() %>%
-    mutate_if(is.list, ~paste(unlist(.), collapse = '|'))
-
-  }
-
-  cat("Make sure you've selected the correct values:\n\n")
-  # cat("\nSpecies:\n" )
-  print(table(ndGLM$species))
-  # cat("\nSite:\n")
-  print(table(ndGLM$site))
-  # cat("\nYear:\n")
-  print(table(ndGLM$year))
-  cat("\nHow many NAs are there in camera fate?\n", sum(is.na(ndGLM$cfate)), "\n")
-  cat("\nAnd in nest age?\n", sum(is.na(ndGLM$nest_age)), "\n")
-
-  return(ndGLM)
-}
+source("filter_dat.R")
 ```
-
-
-
-
 
 ##*
 ------------------------------------------------------------------------
@@ -185,46 +114,7 @@ filter_dat1 <- function(nestData, sites=c("RUTE","RUTW"), spp=c("LETE","CONI"),
 ### a. Data settings: 
 
 ```{r other-settings, echo=FALSE}
-debug        = FALSE
-
-# missing_diag = FALSE
-missing_diag = TRUE
-separation   = FALSE
-
-corrplots1   = FALSE
-corrplots2   = TRUE
-
-hist1        = FALSE
-hist2        = TRUE
-
-tab1         = FALSE
-tab2         = TRUE
-
-plsettings1 <- c(corrplots1,  
-                   hist1,
-                   tab1
-                   )
-
-plsettings2 <- c(corrplots2,  
-                   hist2,
-                   tab2
-                   )
-
-sites_sel <- c("RUTE", "RUTW")
-spp_sel <- c("LETE", "CONI")
-cam_str <- c("Y")
-
-feb          = FALSE
-addFieldFate = FALSE
-grouped      = TRUE
-compare      = FALSE
-old_data     = FALSE
-
-UHisH = TRUE
-# UHisH = FALSE
-# UFisF = TRUE
-UFisF = FALSE
-
+source("fateGLM_settings.R")
 ```
 
 
@@ -381,17 +271,35 @@ ndGLM_red$misclass[is.na(ndGLM_red$misclass)] = 0
 
 ndGLM_miss <- dat_miss(ndGLM_red)
 
-saveRDS(ndGLM1, file="ndGLM1.rds")
-rm(ndGLM1)
+# ndGLM_all <- ndGLM1 
+# table(ndGLM_all$cam_fate, useNA = "ifany")
+# table(ndGLM_all$nest_age, useNA = "ifany")
+```
+
+
+```{r remove-NA-fate}
 ```
 
 
 ### b. Edit and refactor the data:
 
-This creaes the dataset to be used for the imputation
+#### Create the dataset to be used for imputation of both nest age and true fate:
+
+```{r}
+ndGLM_all <- ndGLM1 %>%
+  set_var_types() %>%
+  mutate(mclass = misclass == 1,
+         isu    = is_u == 1) %>%
+  mutate(across(c(isu, mclass), as.factor))
+
+saveRDS(ndGLM1, file="ndGLM1.rds")
+rm(ndGLM1)
+```
+
+
+#### This creaes the dataset to be used for the imputation of nest age only (remove missing cam fate)
 
 ```{r set-types}
-
 ndGLM_red <- ndGLM_red %>%
   set_var_types() %>%
   mutate(mclass = misclass == 1,
@@ -402,7 +310,11 @@ ndGLM_red <- ndGLM_red %>%
 # ndGLM_red$species <- relevel(ndGLM_red$species, ref="LETE")
 
 print_vars(ndGLM_red)
+```
 
+#### This reduces the number of fate categories for both datasets :
+
+```{r set-types}
 nfate=6
 ndGLM_ <- ndGLM_red %>%
   refactor(num_fate=nfate) 
@@ -416,6 +328,16 @@ stillMissing <- ndGLM_$nest[which(is.na(ndGLM_[[var]]))]
 
 saveRDS(ndGLM_red, "ndGLM_red.rds")
 rm(ndGLM_red)
+
+
+ndGLM_all <- ndGLM_all %>%
+  refactor(num_fate=nfate)
+levels(ndGLM_all$cam_fate)
+
+
+ndGLM_all %>% sapply(function(x) sum(is.na(x)))
+# var <- "nest_age"
+# stillMissing <- ndGLM_all$nest[which(is.na(ndGLM_all[[var]]))]
 
 
 
@@ -474,6 +396,9 @@ rm(ndGLM_cc)
 
 ```{r scale-df, echo=TRUE}
 # ndGLM_scl <- ndGLM1 %>%
+ndGLM_scl_all <- ndGLM_all %>%
+  mutate(across(predictors, function(x) as.numeric(scale(x,scale=F)))) #%>%
+
 ndGLM_scl <- ndGLM_ %>%
   mutate(across(predictors, function(x) as.numeric(scale(x,scale=F)))) #%>%
 ndGLM_scl_cc <- ndGLM_scl %>% remove_na(allNA = ndGLM_miss)
@@ -529,14 +454,14 @@ modList <- c(
 
 
 ```{r formulas, echo=FALSE}
-prOrder <- c("species", "nest_age", "obs_int", "fdate", "cam_fate")
+prOrder <- c("species", "nest_age", "obs_int", "cam_fate", "fdate")
 inter <- c("species * nest_age")
 inter
 inter2 <- c("species * obs_int") # has to be a vector to work with expand_grid
-otherVar <- c("cam_fate", "fdate", "obs_int")
+otherVar <- c("obs_int", "cam_fate", "fdate")
 otherVar
 list(otherVar)
-otherVar2 <- c("cam_fate", "fdate", "nest_age")
+otherVar2 <- c( "nest_age", "cam_fate", "fdate")
 
 # inter1 <- c("species", "nest_age", "species:nest_age")
 combMod <- function(inter, otherVar){
@@ -597,7 +522,8 @@ Also lets you choose the response variable for question 2 (HF_mis or misclass) a
 # datName      <- "ndGLM_cc"
 datName      <- "ndGLM_scl_cc"
 # datNameImp   <- "ndGLM_"
-datNameImp   <- "ndGLM_scl"
+# datNameImp   <- "ndGLM_scl"
+datNameImp   <- "ndGLM_scl_all"
 # resp2   <- "misclass"
 # met     <- "glm.fit"
 # met     <- "jeffreys"
@@ -709,6 +635,7 @@ cat(question)
 dat <- get(datName)
 mods <- list()
 resp   <- "HF_mis"
+# resp   <- "misclass"
 # cat("\n\nNumber of fate categories:", length(levels(ndGLM_2_cc$cam_fate)))
 cat("\n\nData used:", datName)
 cat("\n\nNumber of fate categories:", length(levels(dat$cam_fate)))
@@ -719,16 +646,16 @@ cat("\n\nRESPONSE VAR:",resp,"\n\nMODELS:\n")
 # mods <- run_models(dataMod=dat, resp=resp2, met="glm.fit", modlist=modList)
 mods <- run_models(dataMod=dat, resp=resp, met=met, modlist=modList)
 # mods <- run_models(dataMod=dat, resp=resp, met="brglm2", modlist=modList)
-# intPlot <- 
-sjPlot::set_theme(
-  base=theme_classic()
-  
-)
-sjPlot::plot_model(mods[[5]], type="int") +
-  labs(x="Nest age (days)", y="Predicted probability \nof misclassification", title="Interaction Plot for Species and Nest Age")
-
-# j+
-  # theme_classic()
+# # intPlot <- 
+# sjPlot::set_theme(
+#   base=theme_classic()
+#   
+# )
+# sjPlot::plot_model(mods[[5]], type="int") +
+#   labs(x="Nest age (days)", y="Predicted probability \nof misclassification", title="Interaction Plot for Species and Nest Age")
+# 
+# # j+
+#   # theme_classic()
 
 
 #+
