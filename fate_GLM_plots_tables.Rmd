@@ -60,6 +60,21 @@ if(tab1 == TRUE | tab2 == TRUE){
 #### more tables
 
 ```{r}
+
+table(ndGLM_red$field_fate)
+cat("camera fate of nests marked unknown in the field:\n")
+ndGLM_red %>% filter(field_fate=="U") %>% group_by(cam_fate) %>% summarize(sum = n())
+cat("true cause of failure for failed (unknown) nests:\n")
+ndGLM_red %>% filter(field_fate == "F") %>% group_by(cam_fate) %>% summarize(sum=n())
+cat("marked failed (known cause) but reclassified:\n")
+ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "Ca") & misclass==1) %>% select(nest, species, field_fate, cam_fate) 
+cat("marked hatched but reclassified as failed:\n") # only field fate was consolidated to 6 categories
+ndGLM_red %>% filter(field_fate == "H" & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
+cat("marked failed but reclassified as hatched:\n")
+ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "F", "Ca") & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
+```
+
+```{r}
 "nests with final observation interval > 5:\n"
 ndGLM_ <- readRDS("ndGLM_.rds")
 ndGLM_ %>% filter(obs_int>5) %>% group_by(cam_fate) %>% summarize(sum=n())
@@ -67,13 +82,11 @@ ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(cam_fate) %>% summar
 ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(field_fate) %>% summarize(sum=n())
 ```
 
-
 ```{r}
 ndGLM_ %>% filter(obs_int>5 & species=="LETE") %>% group_by(nest_age) %>% summarize(sum=n())
 ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(nest_age) %>% summarize(sum=n())
 # ndGLM_ %>% filter(species=="CONI") %>% group_by(nest_age) %>% summarize(sum=n())
 ```
-
 
 ```{r scale-df, eval=FALSE, include=FALSE}
 table(ndGLM_scl$field_fate)
