@@ -14,7 +14,7 @@ output: html_document
 #### Basic mice functionality: impute, fit, pool
 
 ```{r, warning=FALSE}
-source("fn_code/mice_functions.R")
+source("mice_functions.R")
 ```
 
 #### Functions to create interaction plots including imputed data:
@@ -23,24 +23,18 @@ source("fn_code/mice_functions.R")
 # source("imp_interaction_plot.R")
 ```
 
-#### Function: Plots for the imputated data or to show missingness:
-
-```{r}
-source("fn_code/mice_plots.R")
-```
-
 #### Function to create the pooled regression table for the top model:
 
 ```{r, warning=FALSE}
 # source("imp_reg_tab.R")
-source("fn_code/other_imp.R")
+source("other_imp.R")
 ```
 
 #### Functions to make simulated NAs & impute,etc. to test the imputation method being used
 
 ```{r}
-source("fn_code/imp_sim_functions.R")
-source("fn_code/suppress_warnings.R")
+source("imp_sim_functions.R")
+# source("suppress_warnings.R")
 ```
 
 ### OPTIONAL:

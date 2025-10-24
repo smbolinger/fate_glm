@@ -18,6 +18,8 @@ params:
   imp: "all"
   imp_met: "pmm"
   type: "test"
+  home_dir: "C:/Users/sarah/Dropbox/Models/fate_glm/"
+  data_file: "clean_data.csv"
 ---
 
 ## Introduction
@@ -76,11 +78,11 @@ library(tidyverse)
 ### b. Create functions
 
 ```{r functions, echo=TRUE}
-source("fn_code/imp_sim_functions.R")
-source("fn_code/missing_data.R")
-source("fn_code/fit_models.R")
-source("fn_code/visualize_data.R")
-source("fn_code/edit_model_data.R")
+source("imp_sim_functions.R")
+source("missing_data.R")
+source("fit_models.R")
+source("visualize_data.R")
+source("edit_model_data.R")
 # source("filter_dat.r")
 # source("UHF_fateGLM.R")
 ```
@@ -91,6 +93,7 @@ source("fn_code/edit_model_data.R")
 sett = params$sett
 missing_diag = params$miss_diag
 typ = params$type
+homeDir = params$home_dir
 source("fateGLM_settings.R")
 ```
 
@@ -102,7 +105,9 @@ source("fateGLM_settings.R")
 ### a. Load cleaned data:
 
 ```{r load-data, echo=FALSE, message=FALSE}
-  filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
+  # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
+  # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
+filename <- params$data_file
 cat("importing from:",filename,"\n\n")
 # nData <- read_csv(filename)[-1]
 nData <- read_csv(filename) # To run python code, need reticulate package.

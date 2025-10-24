@@ -1,7 +1,7 @@
 
 if(sett == "default"){
   # homeDir <- "C:/Users/sarah/Dropbox/nest_models/"
-  homeDir <- "C:/Users/sarah/Dropbox/Models/fate_glm/"
+  # homeDir <- "C:/Users/sarah/Dropbox/Models/fate_glm/"
   
   predictors <- c("nest_age", "obs_int", "fdate") # numeric predictors to be used
   prList     <- as.list(predictors)
