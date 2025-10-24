@@ -20,11 +20,14 @@ mod <- modList[1]
 var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age")
 bias_names <- c("bias", "pctBias", "covRate", "avgWidth", "RMSE")
 met_list <- c("pmm", "rf", "cart")
-nrun  <-500
-if(typ=="test"){
-  met_list <- c("pmm", "rf")
-  nrun <- 2
-}
+# nrun  <-500
+# if(typ=="test"){
+#   met_list <- c("pmm", "rf")
+#   nrun <- 2
+# }else if (typ=="norm"){
+#   nrun <- 500
+#   met_list <- c("pmm", "rf", "cart")
+# }
 # resp is passed from fate_GLM1
 ```
 
@@ -37,7 +40,7 @@ missing_tab("sim_dat",prVars)
 imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=nrun)
 # saveRDS(imp_sim, "imp_sim_20oct.rds")
 bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = resp,vars = var_list, mod = mod,mets = met_list, biasVals = bias_names)
-bias_out
+write.csv(bias_out, file = "bias_vals.csv")# write to csv in case script aborts 
 
 ```
 
