@@ -17,7 +17,7 @@ params:
   resp2: "HF_mis"
   imp: "all"
   imp_met: "pmm"
-  type: "test"
+  n_run: 500
   home_dir: "/home/wodehouse/projects/fate_glm/"
   data_file: "clean_data.csv"
 ---
@@ -92,7 +92,8 @@ source("edit_model_data.R")
 ```{r other-settings, echo=FALSE}
 sett = params$sett
 missing_diag = params$miss_diag
-typ = params$type
+# typ = params$type
+nrun=params$n_run
 homeDir = params$home_dir
 source("fateGLM_settings.R")
 ```
