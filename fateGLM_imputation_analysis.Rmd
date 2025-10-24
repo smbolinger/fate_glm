@@ -1,0 +1,172 @@
+---
+title: "imputation analysis"
+author: "Sarah Bolinger"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Remove values from the data to test the efficiency of the imputation 
+
+```{r, warning=FALSE}
+# source("GLM_ampute.R")
+
+# suppress_warnings()
+# suppressWarnings()
+mod <- modList[1]
+var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age")
+bias_names <- c("bias", "pctBias", "covRate", "avgWidth", "RMSE")
+met_list <- c("pmm", "rf", "cart")
+nrun  <-500
+if(typ=="test"){
+  met_list <- c("pmm", "rf")
+  nrun <- 2
+}
+# resp is passed from fate_GLM1
+```
+
+
+```{r, warning=FALSE}
+# Create the simulated data with NAs (using the complete-case df):
+sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
+missing_tab("sim_dat",prVars)
+# imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=500)
+imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=nrun)
+# saveRDS(imp_sim, "imp_sim_20oct.rds")
+bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = resp,vars = var_list, mod = mod,mets = met_list, biasVals = bias_names)
+bias_out
+
+```
+
+### AIC Analysis - Settings
+
+```{r}
+# (see chunk further down)
+regMet <- "brglm_fit"
+fam     <- binomial
+iter    <- 500
+fVar <- "_allFates"
+uVar <- "_UHisU"
+if(UHisH) uVar <- "_UHisH" 
+if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
+```
+
+
+```{r, results='asis'}
+cat("* * * * * * * * * * * * * * * * * * * * * * * * * * * *")
+cat(str_pad(paste("\n*\timputation using this data:", datNameImp), 46, "right"), "*")
+cat(str_pad(paste("\n*\tand this response variable:", resp), 46, "right"), "*")
+cat(str_pad(paste("\n*\tand this method:", regMet), 46, "right"), "*")
+cat("\n* * * * * * * * * * * * * * * * * * * * * * * * * * * *")
+```
+
+### Fit & pool the results
+
+Depends on response variable - must run each time you change it
+
+```{r, warning=FALSE}
+# uses the response specified in fate_GLM1.Rmd
+impMod      <- impFit(impDat = impInt, modList = modList)
+impModPool  <- poolImp(impMod = impMod, modList= modList)
+# impMod2     <- impFit(impDat=impIntPMM, modList=modList)
+# impModPool2 <- poolImp(impMod = impMod2, modList= modList)
+```
+
+### Create the AIC table with the model fit using the imputed data
+
+Extract the degrees of freedom, as well as the average AIC, Akaike weight, & log likelihood 
+(across all imputations) for each model, and create the AIC table.
+
+```{r}
+# lapply(impRes, summary)
+# if comparing different UHisH or different # of fates:
+# fname <- paste0(datNameImp,"_impAIC",quest,uVar,fVar)
+
+fname <- paste0(datNameImp,"_impAIC",quest,"_RF" )
+# fname2 <- paste0(datNameImp,"_impAIC",quest,"_PMM" )
+
+# need to have fit the models in the main script for this to work (just for naming):
+aicImp <- aicImpMods(impModPool = impModPool,modList = modList, mods=mods,filePrefix = fname, dir=homeDir)
+# only output is the filename - can't see the R object
+aicTabImp <- readRDS("dataframes/impAICtab.rds")
+# aicTabImp
+knitr::include_graphics(paste0("analysis/",aicImp),
+                        dpi=(1300/6)) # dpi setting = only thing that works
+
+# aicImp2 <- aicImpMods(impModPool = impModPool2,modList = modList,mods=mods,filePrefix = fname2)
+# aicTabImp <- readRDS("impAICtab.rds")
+# aicTabImp
+# knitr::include_graphics(paste0("analysis/",aicImp),
+#                         dpi=(1300/6)) # dpi setting = only thing that works
+```
+
+### Create the regression table(s) for the top model(s):
+
+```{r, warning=FALSE}
+howManyMod = 4
+for(m in 1:howManyMod){
+  tab <- regtab(impInt, aicTabImp, modList)
+  
+}
+```
+
+### Plot the marginal effects if there is an interaction in the top model:
+
+For other methods I tried that didn't work, see old_code document
+
+Or use stratification as seen here: https://www.bookdown.org/rwnahhas/RMPH/mi-mlr.html
+
+marginaleffects package: 
+
+- use avg_comparisons for categorical variables and get the average predicted values for each level of X; and by=M to see if the changes depend on a moderator M
+
+When M is continuous, use the predictions() function because calculating an average for each value of a continuous variable is not practical.
+
+#### Create the datagrid objects that marginal effects will use as "newdata" when making predictions
+
+```{r}
+intGridAge <- marginaleffects::datagrid(newdata=ndGLM_scl,
+                                         # species=c("CONI", "LETE"), # try using only M in the grid
+                                        # do I need length.out to be longer bc the df is high?
+                                         nest_age= seq(-15, 15, length.out=200)) # using the centered data
+                                     # obs_int = c(-4:6))
+fullGridAge <- marginaleffects::datagrid(newdata=ndGLM_scl,
+                                         species=c("CONI", "LETE"),
+                                         nest_age= seq(-15, 15, length.out=200)) # using the centered data
+                                         # nest_age= fivenum) # using the centered data
+
+intGridObs  <- marginaleffects::datagrid(newdata=ndGLM_scl,# using 1000 values doesn't seem to help with slopes plot
+                                          # species=c("CONI", "LETE"),
+                                          obs_int = seq(from=-4, to=6, length.out=200)) 
+                                           
+fullGridObs  <- marginaleffects::datagrid(newdata=ndGLM_scl,
+                                          species=c("CONI", "LETE"),
+                                          obs_int = seq(from=-4, to=6, length.out=200))
+                                          # obs_int = fivenum) 
+# }
+if(resp=="is_u"){
+  yl = "Predicted probability of\nunknown field fate"
+} else {
+  yl = "Predicted probability of \nmisclassification"
+}
+```
+
+#### Plot manually - question 1
+
+[Other attempts at interaction plot functions are in imp_interaction_plot.R]
+
+Now the above ones aren't working (where I tried to make it automated), so try 
+entering the variables manually:
+
+```{r eval=FALSE, include=FALSE, warning=FALSE}
+source("imp_int_q1.R")
+```
+
+#### plot manually - question 2 
+
+```{r eval=FALSE, include=FALSE, warning=FALSE}
+source("imp_int_q2.R")
+```
