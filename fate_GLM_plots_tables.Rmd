@@ -76,12 +76,12 @@ ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "F", "Ca") & HF_mis=
 
 ```{r}
 "nests with final observation interval > 5:\n"
-ndGLM_ <- readRDS("dataframes/ndGLM_.rds")
-ndGLM_ %>% filter(obs_int>5) %>% group_by(cam_fate) %>% summarize(sum=n())
-ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(cam_fate) %>% summarize(sum=n())
-ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(field_fate) %>% summarize(sum=n())
-ndGLM_ %>% filter(obs_int>5 & species=="LETE") %>% group_by(nest_age) %>% summarize(sum=n())
-ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(nest_age) %>% summarize(sum=n())
+ndGLM <- readRDS("dataframes/ndGLM1.rds")
+ndGLM %>% filter(obs_int>5) %>% group_by(cam_fate) %>% summarize(sum=n())
+ndGLM %>% filter(obs_int>5 & species=="CONI") %>% group_by(cam_fate) %>% summarize(sum=n())
+ndGLM %>% filter(obs_int>5 & species=="CONI") %>% group_by(field_fate) %>% summarize(sum=n())
+ndGLM %>% filter(obs_int>5 & species=="LETE") %>% group_by(nest_age) %>% summarize(sum=n())
+ndGLM %>% filter(obs_int>5 & species=="CONI") %>% group_by(nest_age) %>% summarize(sum=n())
 # ndGLM_ %>% filter(species=="CONI") %>% group_by(nest_age) %>% summarize(sum=n())
 ```
 

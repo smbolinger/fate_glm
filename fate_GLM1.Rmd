@@ -208,6 +208,8 @@ rm(ndGLM1)
 ```{r remove-NA-fate}
 ndGLM_red <- ndGLM_[!is.na(ndGLM_$cam_fate),]
 ndGLM_red <- ndGLM_red[ndGLM_red$cam_fate!="U",]
+# saveRDS(ndGLM_, file="dataframes/ndGLM_.rds")
+# rm(ndGLM_)
 ```
 
 ##*
