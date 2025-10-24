@@ -14,7 +14,7 @@ output: html_document
 #### Basic mice functionality: impute, fit, pool
 
 ```{r, warning=FALSE}
-source("mice_functions.R")
+source("fn_code/mice_functions.R")
 ```
 
 #### Functions to create interaction plots including imputed data:
@@ -26,27 +26,29 @@ source("mice_functions.R")
 #### Function: Plots for the imputated data or to show missingness:
 
 ```{r}
-source("mice_plots.R")
+source("fn_code/mice_plots.R")
 ```
 
 #### Function to create the pooled regression table for the top model:
 
 ```{r, warning=FALSE}
-source("imp_reg_tab.R")
+# source("imp_reg_tab.R")
+source("fn_code/other_imp.R")
 ```
 
 #### Functions to make simulated NAs & impute,etc. to test the imputation method being used
 
 ```{r}
-source("imp_sim_functions.R")
-source("suppress_warnings.R")
+source("fn_code/imp_sim_functions.R")
+source("fn_code/suppress_warnings.R")
 ```
 
 ### OPTIONAL:
 #### Create a small set of imputations (m=10) for testing code (does not run during knitting)
 
 ```{r eval=FALSE, include=FALSE, warning=FALSE}
-source("small_imputation.R")
+# source("small_imputation.R")
+small_imp()
 ```
 
 #### How many imputations?
@@ -69,50 +71,23 @@ Select the variables to impute and create a "shadow matrix"
 
 ```{r}
 
-col_sel <- c(prVars, "HF_mis", "is_u") # columns to select, as strings
+# col_sel <- c(prVars, "HF_mis", "is_u") # columns to select, as strings
+col_sel <- c(prVars, resp1, resp2) # columns to select, as strings
+# col_sel
+# met     <- "pmm"
 
 # dat4imp <- get(datNameImp) %>% select(all_of(col_sel)) %>% naniar::bind_shadow() 
 dat4imp <- get(datNameImp) %>% select(all_of(col_sel))
 d4i_shadow <- naniar::as_shadow(dat4imp)
 # %>% mice::md.pattern()
-```
 
-### Stratification
-
-#### 1. Predictive mean matching (pmm) [optional]
-
-```{r echo=TRUE}
-```
-
-
-```{r eval=FALSE, include=FALSE}
-mice::densityplot(impIntPMM)
-mice::xyplot(impIntPMM, nest_age ~ fdate)
-
-# density_plot(impIntPMM) # this function is in a separate R file
-# imp_plot(impIntPMM, plType = "density")
-```
-
-#### 2. Random forest
-
-Another method for dealing with interactions - impute-then-transform
-
-Impute separately for each species (each level of categorical var) and then combine
-
-```{r}
-col_sel <- c(prVars, resp) # columns to select, as strings
-datLT <- get(datNameImp) %>% filter(species=="LETE") %>% select(all_of(col_sel))
-impLT <- mice::mice(datLT, seed=613, m=30, method="rf", printFlag=FALSE)
-
-datCO <- get(datNameImp) %>% filter(species=="CONI") %>% select(all_of(col_sel))
-impCO <- mice::mice(datCO, seed=613, m=30,method="rf", printFlag=FALSE)
-
-# impInt <- mice::cbind(impLT, impCO)
-impInt <- mice::rbind(impLT, impCO)
+# impInt <- impStrat(datNameImp, met="pmm", col_sel)
+impInt <- impStrat(datNameImp, met=impMet, col_sel)
 ```
 
 ### DIAGNOSTICS
 
+#### Plots
 These functions are from mice_plots.R
 
 ```{r}
@@ -127,151 +102,5 @@ imp_plot(impInt, plType = "density")
 imp_plot(impInt, nest_age ~ fdate, plType="xy")
 ```
 
-#### Remove values from the data to test the efficiency of the imputation 
-
-```{r, warning=FALSE}
-# source("GLM_ampute.R")
-
-# suppress_warnings()
-# suppressWarnings()
-var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age")
-bias_names <- c("bias", "pctBias", "covRate", "avgWidth", "RMSE")
-met_list <- c("pmm", "rf", "cart")
-
-# Create the simulated data with NAs (using the complete-case df):
-sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
-imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=500)
-# saveRDS(imp_sim, "imp_sim_20oct.rds")
-bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = resp,vars = var_list, mod = mod,mets = met_list, biasVals = bias_names)
-bias_out
-
-```
-
-
-### AIC Analysis - Settings
-
-```{r}
-# (see chunk further down)
-regMet <- "brglm_fit"
-fam     <- binomial
-iter    <- 500
-fVar <- "_allFates"
-uVar <- "_UHisU"
-if(UHisH) uVar <- "_UHisH" 
-if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
-cat("* * * * * * * * * * * * * * * * * * * * * * * * * * * *")
-cat(str_pad(paste("\n*\timputation using this data:", datNameImp), 46, "right"), "*")
-cat(str_pad(paste("\n*\tand this response variable:", resp), 46, "right"), "*")
-cat(str_pad(paste("\n*\tand this method:", regMet), 46, "right"), "*")
-cat("\n* * * * * * * * * * * * * * * * * * * * * * * * * * * *")
-```
-
-### Fit & pool the results
-
-Depends on response variable - must run each time you change it
-
-```{r, warning=FALSE}
-# uses the response specified in fate_GLM1.Rmd
-impMod      <- impFit(impDat = impInt, modList = modList)
-impModPool  <- poolImp(impMod = impMod, modList= modList)
-impMod2     <- impFit(impDat=impIntPMM, modList=modList)
-impModPool2 <- poolImp(impMod = impMod2, modList= modList)
-```
-
-### Create the AIC table with the model fit using the imputed data
-
-Extract the degrees of freedom, as well as the average AIC, Akaike weight, & log likelihood 
-(across all imputations) for each model, and create the AIC table.
-
-```{r}
-# lapply(impRes, summary)
-# if comparing different UHisH or different # of fates:
-# fname <- paste0(datNameImp,"_impAIC",quest,uVar,fVar)
-
-fname <- paste0(datNameImp,"_impAIC",quest,"_RF" )
-fname2 <- paste0(datNameImp,"_impAIC",quest,"_PMM" )
-
-# need to have fit the models in the main script for this to work (just for naming):
-aicImp <- aicImpMods(impModPool = impModPool,modList = modList,mods=mods,filePrefix = fname)
-# only output is the filename - can't see the R object
-aicTabImp <- readRDS("impAICtab.rds")
-aicTabImp
-knitr::include_graphics(paste0("analysis/",aicImp),
-                        dpi=(1300/6)) # dpi setting = only thing that works
-
-aicImp2 <- aicImpMods(impModPool = impModPool2,modList = modList,mods=mods,filePrefix = fname2)
-aicTabImp <- readRDS("impAICtab.rds")
-aicTabImp
-knitr::include_graphics(paste0("analysis/",aicImp),
-                        dpi=(1300/6)) # dpi setting = only thing that works
-```
-
-### Create the regression table(s) for the top model(s):
-
-```{r, warning=FALSE}
-howManyMod = 4
-for(m in 1:howManyMod){
-  tab <- regtab(impInt, aicTabImp, modList)
-  
-}
-```
-
-### Plot the marginal effects if there is an interaction in the top model:
-
-For other methods I tried that didn't work, see old_code document
-
-Or use stratification as seen here: https://www.bookdown.org/rwnahhas/RMPH/mi-mlr.html
-
-marginaleffects package: 
-
-- use avg_comparisons for categorical variables and get the average predicted values for each level of X; and by=M to see if the changes depend on a moderator M
-
-When M is continuous, use the predictions() function because calculating an average for each value of a continuous variable is not practical.
-
-#### Create the datagrid objects that marginal effects will use as "newdata" when making predictions
-
-```{r}
-intGridAge <- marginaleffects::datagrid(newdata=ndGLM_scl,
-                                         # species=c("CONI", "LETE"), # try using only M in the grid
-                                        # do I need length.out to be longer bc the df is high?
-                                         nest_age= seq(-15, 15, length.out=200)) # using the centered data
-                                     # obs_int = c(-4:6))
-fullGridAge <- marginaleffects::datagrid(newdata=ndGLM_scl,
-                                         species=c("CONI", "LETE"),
-                                         nest_age= seq(-15, 15, length.out=200)) # using the centered data
-                                         # nest_age= fivenum) # using the centered data
-
-intGridObs  <- marginaleffects::datagrid(newdata=ndGLM_scl,# using 1000 values doesn't seem to help with slopes plot
-                                          # species=c("CONI", "LETE"),
-                                          obs_int = seq(from=-4, to=6, length.out=200)) 
-                                           
-fullGridObs  <- marginaleffects::datagrid(newdata=ndGLM_scl,
-                                          species=c("CONI", "LETE"),
-                                          obs_int = seq(from=-4, to=6, length.out=200))
-                                          # obs_int = fivenum) 
-# }
-if(resp=="is_u"){
-  yl = "Predicted probability of\nunknown field fate"
-} else {
-  yl = "Predicted probability of \nmisclassification"
-}
-```
-
-#### Plot manually - question 1
-
-[Other attempts at interaction plot functions are in imp_interaction_plot.R]
-
-Now the above ones aren't working (where I tried to make it automated), so try 
-entering the variables manually:
-
-```{r eval=FALSE, include=FALSE, warning=FALSE}
-source("imp_int_q1.R")
-```
-
-#### plot manually - question 2 
-
-```{r eval=FALSE, include=FALSE, warning=FALSE}
-source("imp_int_q2.R")
-```
 
 

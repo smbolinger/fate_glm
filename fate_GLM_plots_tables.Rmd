@@ -59,7 +59,7 @@ if(tab1 == TRUE | tab2 == TRUE){
 
 #### more tables
 
-```{r}
+```{r, results='asis'}
 
 table(ndGLM_red$field_fate)
 cat("camera fate of nests marked unknown in the field:\n")
@@ -76,13 +76,10 @@ ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "F", "Ca") & HF_mis=
 
 ```{r}
 "nests with final observation interval > 5:\n"
-ndGLM_ <- readRDS("ndGLM_.rds")
+ndGLM_ <- readRDS("dataframes/ndGLM_.rds")
 ndGLM_ %>% filter(obs_int>5) %>% group_by(cam_fate) %>% summarize(sum=n())
 ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(cam_fate) %>% summarize(sum=n())
 ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(field_fate) %>% summarize(sum=n())
-```
-
-```{r}
 ndGLM_ %>% filter(obs_int>5 & species=="LETE") %>% group_by(nest_age) %>% summarize(sum=n())
 ndGLM_ %>% filter(obs_int>5 & species=="CONI") %>% group_by(nest_age) %>% summarize(sum=n())
 # ndGLM_ %>% filter(species=="CONI") %>% group_by(nest_age) %>% summarize(sum=n())
@@ -142,7 +139,7 @@ gt(reassigned)
 # ftab <- as.data.frame(fate_tab) # when you make it a df, it just "lengthens" it
 # ftabg <- gt(ftab, rowname_col = "cam_fate", groupname_col = "field_fate", row_group_as_column = TRUE)
 # ftabg
-ndGLM_red <- readRDS("ndGLM_red.rds")
+ndGLM_red <- readRDS("dataframes/ndGLM_red.rds")
 gtsummary::tbl_cross(ndGLM_red, row=field_fate, col=cam_fate)
 gtsummary::tbl_cross(ndGLM_red, row=field_fate, col=cam_fate) %>%
   as_gt() %>%
@@ -244,7 +241,7 @@ if(hist1 | hist2){
 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 catPlotSp <- plot_predictors(resp="species",
                              dat=dat,
                              vars = predictors,
@@ -267,7 +264,7 @@ catPlotSp <- plot_predictors(resp="species",
 
 #### true fate
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 names(cbPalette) <- unique(ndGLM_$cam_fate)
 catPlotSp <- plot_predictors(resp="cam_fate",
@@ -291,7 +288,7 @@ catPlotSp <- plot_predictors(resp="cam_fate",
 
 #### correlation
 
-```{r scatterplot}
+```{r scatterplot, eval=FALSE, include=FALSE}
 # names(pairList)
 # pairList <- combn(predictors, m=2, simplify=F)
 # spc <- 

@@ -149,7 +149,7 @@ if(FALSE){
 
 ### Examine missing data 
 
-```{r missing-diag, echo=TRUE}
+```{r missing-diag, echo=TRUE, warning=FALSE}
 if(missing_diag){
   # diag_miss()
   # dName <- datName
@@ -201,7 +201,8 @@ if(missing_diag){
                  missing ~ "Missing (percent)",
                  p ~ "p-value") %>%
       # nestGLM::save_tab(suffix=paste(dName,dep,expl[v],uVar,sep="_"), rtf=TRUE)
-      nestGLM::save_tab(suffix=paste(datName,expl[v],uVar,sep="_"), rtf=TRUE)
+      # nestGLM::save_tab(suffix=paste(datName,expl[v],uVar,sep="_"),dir = homeDir, rtf=TRUE)
+      save_tab(suffix=paste(datName,expl[v],uVar,sep="_"),dir = homeDir, rtf=TRUE)
     tabNames[v] <- missTab
     for(i in seq_along(dep)){
     missPP <- ndDiag %>%
@@ -210,7 +211,7 @@ if(missing_diag){
                               position = "fill")
     }
     now = format(Sys.time(), "_%m%d_%H%M_")
-    fname <- paste0(homeDir,"glm_script/figures/pp_",datName,dep[i],expl[v],uVar,now,".svg")
+    fname <- paste0(homeDir,"figures/pp_",datName,dep[i],expl[v],uVar,now,".svg")
     ggsave(plot=missPP, filename = fname)
   }
   
@@ -261,7 +262,7 @@ if(missing_diag){
 
 #### Visualize the missing data via missingness maps
 
-```{r missing-map, echo=TRUE}
+```{r missing-map, echo=TRUE, warning=FALSE}
 if(missing_diag){
   ndGLM1 %>%
     dplyr::select(species, cam_fate, fdate, nest_age, obs_int) %>%

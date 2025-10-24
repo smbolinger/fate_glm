@@ -16,7 +16,7 @@ suffix = paste0("-",datName,quest,uVar,fVar)
 # suffix = "_scl_cc_q1"
 ### why unname?
 aicTab <- unname(mods) %>% aic_mod()
-fname <- aicTab %>% save_tab(suffix=suffix, rtf=TRUE)
+fname <- aicTab %>% save_tab(suffix=suffix, dir = homeDir, rtf=TRUE)
 cat("creating AIC table; filename =",fname)
 
 knitr::include_graphics(paste0("analysis/",fname), 
@@ -53,7 +53,7 @@ for(m in 1:numMods){
   regrTab <- tabRegr(modNum=modnum,
                      mods=mods,
                      resp=resp,
-                     debug=TRUE,
+                     debug=FALSE,
                      suffix=paste0(datName,quest,uVar,fVar,modnum))
   knitr::include_graphics(paste0("analysis/",regrTab),
                           dpi=(1300/6)) # dpi setting = only thing that works
@@ -76,7 +76,7 @@ for(m in 1:numMods){
 ```
 #### Plot the interaction in the top model(s):
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 sjPlot::set_theme(
   base=theme_classic()
   

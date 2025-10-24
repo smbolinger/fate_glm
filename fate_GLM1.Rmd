@@ -9,6 +9,15 @@ output:
 editor_options:
   markdown:
     wrap: 72
+params:
+  miss_diag: FALSE
+  plots: FALSE
+  sett: "default"
+  resp1: "is_u"
+  resp2: "HF_mis"
+  imp: "all"
+  imp_met: "pmm"
+  type: "test"
 ---
 
 ## Introduction
@@ -57,7 +66,7 @@ library(brglm2) # penalized logistic regression
 # library(car)
 library(gt)
 library(gtsummary)
-library(nestGLM)
+# library(nestGLM)
 library(stats)
 library(tidyverse)
 # library(visdat)   # visualize all data and number missing
@@ -67,13 +76,21 @@ library(tidyverse)
 ### b. Create functions
 
 ```{r functions, echo=TRUE}
-source("filter_dat.R")
-source("UHF_fateGLM.R")
+source("fn_code/imp_sim_functions.R")
+source("fn_code/missing_data.R")
+source("fn_code/fit_models.R")
+source("fn_code/visualize_data.R")
+source("fn_code/edit_model_data.R")
+# source("filter_dat.r")
+# source("UHF_fateGLM.R")
 ```
 
 ### c. Data settings, home directory location, etc: 
 
 ```{r other-settings, echo=FALSE}
+sett = params$sett
+missing_diag = params$miss_diag
+typ = params$type
 source("fateGLM_settings.R")
 ```
 
@@ -174,12 +191,12 @@ nfate=6
   
 #### This reduces the number of fate categories and makes sure vars are numeric or factor:
 ndGLM_ <- ndGLM1 %>% set_var_types() %>% refactor(num_fate=nfate) 
-levels(ndGLM_$cam_fate)
+# levels(ndGLM_$cam_fate)
 if (FALSE) ndGLM_ %>% sapply(function(x) sum(is.na(x)))
 ndGLM_$misclass[is.na(ndGLM_$misclass)] = 0  # there are sometimes weird missing values
 ndGLM_miss <- dat_miss(ndGLM1) # moved this elsewhere because it is used there
 
-saveRDS(ndGLM1, file="ndGLM1.rds")
+saveRDS(ndGLM1, file="dataframes/ndGLM1.rds")
 rm(ndGLM1)
 ```
 
@@ -224,13 +241,17 @@ Also lets you choose the response variable for question 2 (HF_mis or misclass) a
 centered <- TRUE
 datName      <- "ndGLM_scl_cc"
 # datNameImp   <- "ndGLM_"
-# datNameImp   <- "ndGLM_scl"
-datNameImp   <- "ndGLM_scl_red"
+imp_age <- c("age", "nest_age")
+if(params$imp=="all") datNameImp   <- "ndGLM_scl"
+if(params$imp %in% imp_age) datNameImp   <- "ndGLM_scl_red"
+impMet <- params$imp_met
+resp1 <- params$resp1
+resp2 <- params$resp2
 # resp2   <- "misclass"
 # met     <- "glm.fit"
 # met     <- "jeffreys"
-met     <- "brglm2"
-impMet  <- met
+metReg     <- "brglm2"
+# impMet  <- metReg
 fVar <- "_allFates"
 uVar <- "_UHisU"
 if(UHisH) uVar <- "_UHisH" 
@@ -251,9 +272,9 @@ ndGLM_scl <- ndGLM_ %>%
 
 ndGLM_scl_cc <- ndGLM_scl %>% remove_na(allNA = ndGLM_miss)
 
-saveRDS(ndGLM_, "ndGLM_.rds")
+saveRDS(ndGLM_, "dataframes/ndGLM_.rds")
 rm(ndGLM_)
-saveRDS(ndGLM_red, "ndGLM_red.rds")
+saveRDS(ndGLM_red, "dataframes/ndGLM_red.rds")
 rm(ndGLM_red)
 ```
 
@@ -294,6 +315,19 @@ if(centered==FALSE){
 }
 ```
 
+### e. Create the imputed datasets
+
+The imputed datasets are stored in one object of class "mids"
+
+The default for the mice package is to run all of the imputed datasets
+(20, in this case) through your model and pool the results
+
+-   Since I have many models, I looped through them and applied this
+    default approach first
+
+```{r create-impute, child="fate_GLM_imputation.Rmd"}
+```
+
 
 ------------------------------------------------------------------------
 ##*
@@ -316,41 +350,34 @@ quest   <- "_q1"
 # dat <- parse(datName) # this one appears to be for files
 dat <- get(datName)
 mods <- list()
-resp   <- "is_u"
+# resp   <- "is_u"
+resp   <- params$resp1 
 modList2 <- paste(resp, modList, sep=" ")
 # modList3 <- lapply(modList2, function(x) as.formula(x)) # what is benefit of formula type?
+```
 
+```{r q1_print, warning=FALSE, results='asis'}
 cat(question)
 cat("\n\nData used:", datName)
 cat("\n\nNumber of fate categories:", length(levels(dat$cam_fate)))
 cat("\n\nRESPONSE VAR:",resp, "\n\n")
-cat("\n\nModels to fit:\n",paste(modList2, collapse="\n" ))
+# cat("\n\nModels to fit:\n",paste(modList2, collapse="\n" ))
+```
 
-mods <- run_models(dataMod=dat, resp=resp, met=met, modlist=modList)
+```{r q1_fit, warning=FALSE}
+# mods <- run_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
+mods <- fit_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
 ```
 ### CREATE AIC TABLES AND REGRESSION TABLES:
 
 ```{r q1_aic, child="fate_GLM_AICc.Rmd"}
 ```
 
-
 ### USING THE IMPUTED DATASETS:
 
-The imputed datasets are stored in one object of class "mids"
+```{r q1-impute, child="fateGLM_imputation_analysis.Rmd"}
 
-The default for the mice package is to run all of the imputed datasets
-(20, in this case) through your model and pool the results
-
--   Since I have many models, I looped through them and applied this
-    default approach first
-
-```{r q1-impute, child="fate_GLM_imputation.Rmd"}
 ```
-
-
-
-
-
 
 ##*
 ------------------------------------------------------------------------
@@ -381,12 +408,16 @@ IF using the reduced data for question 2, print plots/tables again
 question <- "Was nest fate classified correctly in the field?"
 quest    <- "_q2"
 # datName <- "ndGLM_scl_redcc"
-cat(question)
 dat <- get(datName)
 mods <- list()
-resp   <- "HF_mis"
+# resp   <- "HF_mis"
+resp   <- params$resp2 
 # resp   <- "misclass"
+```
+
+```{r q2_print, echo=TRUE, results='asis'}
 # cat("\n\nNumber of fate categories:", length(levels(ndGLM_2_cc$cam_fate)))
+cat(question)
 cat("\n\nData used:", datName)
 cat("\n\nNumber of fate categories:", length(levels(dat$cam_fate)))
 # mods <- run_models(dataMod=datList[[i]], resp="is_u", modlist=modList)
@@ -394,7 +425,10 @@ cat("\n\nRESPONSE VAR:",resp,"\n\nMODELS:\n")
 # mods <- run_models(dataMod=dat, resp=resp, met="logistf", modlist=modList)
 # mods <- run_models(dataMod=dat, resp=resp, met="jeffreys", modlist=modList)
 # mods <- run_models(dataMod=dat, resp=resp2, met="glm.fit", modlist=modList)
-mods <- run_models(dataMod=dat, resp=resp, met=met, modlist=modList)
+```
+
+```{r q2_fit, echo=TRUE}
+mods <- fit_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
 # mods <- run_models(dataMod=dat, resp=resp, met="brglm2", modlist=modList)
 # # intPlot <- 
 # sjPlot::set_theme(
@@ -424,14 +458,9 @@ mods <- run_models(dataMod=dat, resp=resp, met=met, modlist=modList)
 ```{r q2_aic, child="fate_GLM_AICc.Rmd"}
 ```
 
-
 ### USING THE IMPUTED DATASETS:
-```{r}
-# datName <- "ndGLM_scl_red"
-```
 
-
-```{r q2-impute, child="fate_GLM_imputation.Rmd"}
+```{r q2-impute, child="fateGLM_imputation_analysis.Rmd"}
 
 ```
 
