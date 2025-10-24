@@ -116,12 +116,8 @@ nData <- read_csv(filename) # To run python code, need reticulate package.
 ### b. Filter the data:
 
 ```{r filter-data}
-# nData$fdate      <- nData$final_obs_date2
-# nData$final_fate <- nData$final_fate2
-# nData$field_fate <- nData$field_fate11
-# nData$obs_int    <- nData$final_obs_int3
-# nData$nest_age   <- nData$nest_age3 # nest age based on actual obs date and actual hatch date
-# nData$cam_fate   <- nData$cam_fate2
+nData$fdate      <- nData$final_obs_date
+nData$obs_int    <- nData$final_obs_int
 
 nd <- nData %>%
   filter(nest!=20365) %>%  # found on hatch day
