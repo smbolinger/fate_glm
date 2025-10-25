@@ -15,12 +15,12 @@ add_vars <- function(ndat,  debug = F){
   ndGLM <- ndat %>%
     # could also change this to fate_corr, but it's doing the same thing...
     dplyr::mutate(hatchfail = dplyr::case_when(
-      .data$fate %in% c(0, 2:6) ~ 0, # fail
-      .data$fate == 1           ~ 1, # hatch
-      .data$fate == 7           ~ 7,
+      fate %in% c(0, 2:6) ~ 0, # fail
+      fate == 1           ~ 1, # hatch
+      fate == 7           ~ 7,
       # .data$fate == 8           ~ UHval,
       # .data$fate == 9           ~ UFval,
-      is.na(.data$fate)          ~ 7 # MAKE SURE all are coding correctly
+      is.na(fate)          ~ 7 # MAKE SURE all are coding correctly
     )) %>%
 
     # why do I not a warning for cfate the way I did for fate?
@@ -46,11 +46,11 @@ add_vars <- function(ndat,  debug = F){
       fate != cfate ~ 1  # nest was misclassified
     ) ) %>%
     dplyr::mutate(how_mis =
-             dplyr::case_when(misclass==1 ~ howMis(.data$fate, .data$fate),
-                       misclass==0 & .data$fate==7 ~ "U",
-                       misclass==0 & .data$fate!=7 ~ "C")) %>%
+             dplyr::case_when(misclass==1 ~ howMis(fate, fate),
+                       misclass==0 & fate==7 ~ "U",
+                       misclass==0 & fate!=7 ~ "C")) %>%
     # dplyr::mutate(is_u = isU(.data$fate_corr))
-    dplyr::mutate(is_u = isU(.data$fate))
+    dplyr::mutate(is_u = isU(fate))
   return(ndGLM)
   }
 
@@ -59,18 +59,18 @@ set_var_types <- function(ndGLM){
   ndGLM <- ndGLM %>%
     dplyr::mutate(
       dplyr::across(c(
-        .data$obs_int,
-        # .data$fate_date,
-        .data$fdate,
-        .data$nest_age), as.numeric)) %>%
+        obs_int,
+        # fate_date,
+        fdate,
+        nest_age), as.numeric)) %>%
     dplyr::mutate(
       dplyr::across(c(
-        .data$cam_fate,
-        .data$species,
-        .data$HF_mis,
-        .data$misclass,
-        .data$how_mis,
-        .data$is_u), as.factor)) %>%
+        cam_fate,
+        species,
+        HF_mis,
+        misclass,
+        how_mis,
+        is_u), as.factor)) %>%
     as.data.frame()
 
   return(ndGLM)
