@@ -86,28 +86,16 @@ print_stuff <- function(ndGLM2){
 
 
 
-#' Create frequency table and save to file
-#'
-#' Creates a separate frequency table for each response variable and then saves them as .rtf files
-#'
-#' @param ndata must include the variables cam_fate, species (categorical predictor vars) and HF_mis, misclass, & is_u (response vars)
-#' @param vars response variables to include, with emphasis on misclasification (MC) variable choice. options are "all" (default, use both MC variables), "misclass", or "HF_mis"
-#' @param suffix - for filename when saving. default is ""
-#' @param debug - default FALSE
-#' @return the filename of the saved frequency table, which can be used in knitr
-#' @export
-#'
-#' @importFrom magrittr %>%
 # fr_tab <- function(ndata, vars=c("HF_mis","misclass","is_u")){
 fr_tab <- function(ndata, vars="all", suffix="", debug=F){
 
   pre1 <- ndata |>
-    dplyr::mutate(HF_mis = .data$HF_mis == 1) %>%                            # response var # 1
-    gtsummary::tbl_summary(by=.data$HF_mis,
-                include=c(.data$species, .data$cam_fate),
+    dplyr::mutate(HF_mis = HF_mis == 1) %>%                            # response var # 1
+    gtsummary::tbl_summary(by=HF_mis,
+                include=c(species, cam_fate),
                 type=list(where(is.logical) ~ "categorical"), #doesn't work
-                label=list(.data$species ~ "Species",
-                           .data$cam_fate ~ "Camera fate"),
+                label=list(species ~ "Species",
+                           cam_fate ~ "Camera fate"),
                 statistic=list(all_categorical()~"{n}")) %>%
     gtsummary::modify_header(label ~ "**Variable**",
                   all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
@@ -116,12 +104,12 @@ fr_tab <- function(ndata, vars="all", suffix="", debug=F){
     gtsummary::bold_labels()
 
   pre2 <- ndata %>%
-    dplyr::mutate(misclass = .data$misclass == 1) %>%                       # response var # 2
-    gtsummary::tbl_summary(by=.data$misclass,
-                include=c(.data$species, .data$cam_fate),
+    dplyr::mutate(misclass = misclass == 1) %>%                       # response var # 2
+    gtsummary::tbl_summary(by=misclass,
+                include=c(species, cam_fate),
                 type=list(where(is.logical) ~ "categorical"), #doesn't work
-                label=list(.data$species ~ "Species",
-                           .data$cam_fate ~ "Camera fate"),
+                label=list(species ~ "Species",
+                           cam_fate ~ "Camera fate"),
                 statistic=list(all_categorical()~"{n}")) %>%
     gtsummary::modify_header(label ~ "**Variable**",
                   all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
@@ -129,11 +117,11 @@ fr_tab <- function(ndata, vars="all", suffix="", debug=F){
     gtsummary::bold_labels()
 
   pre3 <- ndata |>
-    dplyr::mutate(is_u = .data$is_u == 1) %>%                                # response var # 3
-    gtsummary::tbl_summary(by=.data$is_u,
-                include=c(.data$species, .data$cam_fate),
-                label=list(.data$species ~ "Species",
-                           .data$cam_fate ~ "Camera fate"),
+    dplyr::mutate(is_u = is_u == 1) %>%                                # response var # 3
+    gtsummary::tbl_summary(by=is_u,
+                include=c(species, cam_fate),
+                label=list(species ~ "Species",
+                           cam_fate ~ "Camera fate"),
                 statistic=list(all_categorical()~"{n}")) %>%
 
     gtsummary::modify_header(label ~ "**Variable**",
@@ -161,44 +149,18 @@ fr_tab <- function(ndata, vars="all", suffix="", debug=F){
     gtsummary::as_gt() %>%
     gt::tab_options(table.width = gt::pct(40))
   now = format(Sys.time(), "%m%d_%H%M_")
-  filename <- ifelse(
-    "2021" %in% ndata$year,
-    sprintf("frtab_inc2021_%s.png", now),
-    sprintf("frtab_no2021_%s.png", now)
-  )
+  # filename <- ifelse(
+  #   "2021" %in% year,
+  #   sprintf("frtab_inc2021_%s.png", now),
+  #   sprintf("frtab_no2021_%s.png", now)
+  # )
   filename2 <- sprintf("fr_tab_%s_%s.rtf", now, suffix)
-  pr %>% gt::gtsave(filename=filename, path="analysis/", vwidth=1200, vheight=800)
+  # pr %>% gt::gtsave(filename=filename, path="analysis/", vwidth=1200, vheight=800)
   pr %>% gt::gtsave(filename=filename2, path="analysis/", vwidth=1200, vheight=800)
 
   return(filename)
 }
 
-
-
-#' Plot the (numeric) predictor variables in a histogram
-#'
-#'
-#' @param resp response variable
-#' @param dat  nest data, in a dataframe
-#' @param vars  vector containing the names of the predictors
-#' @param filTit legend title
-#' @param filLabs legend labels
-#' @param filColors variable level colors
-#' @param xLabs x axis labels, in same order as the predictors vector
-#' @param yLab y axis label (count)
-#' @param legendPos change the position of the legend; default is "right"
-#' @param xMaxVect xmax values, in same order as predictors
-#' @param binWidthVect bin width values (if applicable), in same order as predictors
-#' @param nBins number of bins for the histogram; default is 6. Will be ignored if bin width is specified.
-#' @param suffix for the save file; default is empty
-#' @param dir directory for the save file; default is figures
-#' @param brVect list of axis breaks, with a list for each variable (default is blank list)
-#'
-#' @importFrom magrittr %>%
-#' @importFrom rlang sym, .data
-#' @returns a combined plot of all the predictors
-#' @export
-#'
 plot_predictors <- function(resp, dat, vars,
                      filTit="", filLabs, filColors,
                      xLabs, yLab, legendPos="right",
@@ -299,11 +261,6 @@ plot_predictors <- function(resp, dat, vars,
 
 #' Print the response variables that were added
 #'
-#' @param ndGLM nest data - dataframe
-#'
-#' @returns nothing
-#' @export
-#'
 print_vars <- function(ndGLM){
   cat("\nhatchfail variable:\n")
   print(table(ndGLM$hatchfail, useNA = "ifany"))
@@ -318,6 +275,7 @@ print_vars <- function(ndGLM){
   cat("\nis_u variable:")
   print(table(ndGLM$is_u, useNA = "ifany"))
 }
+
 suppress_warnings <- function(.expr, .f, ...) {
   eval.parent(substitute(
     withCallingHandlers( .expr, warning = function(w) {

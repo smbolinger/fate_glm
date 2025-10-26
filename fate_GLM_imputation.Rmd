@@ -79,7 +79,13 @@ d4i_shadow <- naniar::as_shadow(dat4imp)
 # %>% mice::md.pattern()
 
 # impInt <- impStrat(datNameImp, met="pmm", col_sel)
-impInt <- impStrat(datNameImp, met=impMet, col_sel)
+# impInt <- impStrat(datNameImp, met=impMet, col_sel, debug=TRUE)
+impInt <- imputeDat(datNameImp, met=impMet, cols=col_sel, seed = 61389, m = 30, complete = FALSE, debug=TRUE)
+impInt$loggedEvents
+
+# impMets <- impInt$method
+# impMets
+# impMets[2] <- ""
 ```
 
 ### DIAGNOSTICS
@@ -112,7 +118,9 @@ imp_plot(impInt, nest_age ~ fdate, plType="xy")
 mod <- modList[1]
 var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age")
 bias_names <- c("bias", "pctBias", "covRate", "avgWidth", "RMSE")
-met_list <- c("pmm", "rf", "cart")
+# met_list <- c("pmm", "rf", "cart")
+# met_list <- c("default","pmm", "rf", "cart", "caliber","cc")
+met_list <- c("default", "rf","cc")
 # resp is passed from fate_GLM1
 
 
@@ -121,16 +129,34 @@ met_list <- c("pmm", "rf", "cart")
 #### Run the simulation:
 
 ```{r, warning=FALSE}
+nrun <- 500
 # Create the simulated data with NAs (using the complete-case df):
+# sim_dat <- mkSimDat(nd = ndGLM_scl_cc,col_sel=col_sel, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
+# sim_dat <- mkSimDat(nd = dat4imp, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
 sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
 missing_tab("sim_dat",prVars)
 # imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=500)
-imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod,seed=61389, nruns=nrun)
+# imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = resp, vars = var_list, mod = mod,seed=61389, nruns=nrun, debug = TRUE)
+imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=nrun, debug = FALSE) # don't want to set seed
+# imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = resp, vars = var_list, mod = mod,seed=61389, nruns=nrun)
 # saveRDS(imp_sim, "imp_sim_20oct.rds")
+```
+
+#### Calculate the bias:
+
+```{r, warning=FALSE}
 bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = resp,vars = var_list, mod = mod,mets = met_list, biasVals = bias_names)
 write.csv(bias_out, file = "bias_vals.csv")# write to csv in case script aborts 
 bias_out # print the output to console
+```
 
+
+```{r eval=FALSE, warning=FALSE, include=FALSE}
+fitReal <- glm(as.formula(paste0(resp, mod)), data=ndGLM_scl_cc, family=fam, method=regMet, control=brglmControl(maxit=iter) )
+# 
+# trueVals <- coef(fitReal)[var_list]
+# test_avg(sim_dat, fitReal)
+test_avg(imp_sim, fitReal)
 ```
 
 #### Test different methods for dealing with the interactions:

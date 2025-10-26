@@ -19,7 +19,7 @@ params:
   resp2: "HF_mis"
   imp: "all"
   imp_met: "pmm"
-  n_run: 5
+  n_run: 2
   home_dir: "/home/wodehouse/projects/fate_glm/"
   data_file: "clean_data.csv"
 ---
@@ -68,6 +68,7 @@ options(knitr.duplicate.label = "allow")
 library(bbmle)
 library(brglm2) # penalized logistic regression
 # library(car)
+library(CALIBERrfimpute) # could access using ::
 library(gt)
 library(gtsummary)
 # library(nestGLM)
@@ -102,6 +103,7 @@ nrun=params$n_run
 homeDir = params$home_dir
 homeDir = "C:/Users/sarah/Dropbox/Models/fate_glm/"
 source("fateGLM_settings.R")
+all_vars <- c(predictors, pred2 ,params$resp1, params$resp2)
 ```
 
 ##*
@@ -252,11 +254,20 @@ Also lets you choose the response variable for question 2 (HF_mis or misclass) a
 
 ```{r mod-data}
 centered <- TRUE
-datName      <- "ndGLM_scl_cc"
+
+datName        <- ifelse(centered, "ndGLM_scl_cc", "ndGLM_cc")
+if(centered){
+  datNameImp   <- ifelse(params$imp=="all", "ndGLM_scl", "ndGLM_scl_red")
+  # output is a list - because I didn't have the df names in quotes!
+  # if(params$imp=="all") datNameImp = ndGLM_scl else datNameImp=ndGLM_scl_red
+} else {
+  datNameImp   <- ifelse(params$imp=="all", "ndGLM_", "ndGLM_red")
+  # if(params$imp=="all") datNameImp = ndGLM_ else datNameImp=ndGLM_red
+}
 # datNameImp   <- "ndGLM_"
-imp_age <- c("age", "nest_age")
-if(params$imp=="all") datNameImp   <- "ndGLM_scl"
-if(params$imp %in% imp_age) datNameImp   <- "ndGLM_scl_red"
+# imp_age <- c("age", "nest_age")
+# if(params$imp=="all") datNameImp   <- "ndGLM_scl"
+# if(params$imp %in% imp_age) datNameImp   <- "ndGLM_scl_red"
 impMet <- params$imp_met
 resp1 <- params$resp1
 resp2 <- params$resp2
@@ -265,10 +276,14 @@ resp2 <- params$resp2
 # met     <- "jeffreys"
 metReg     <- "brglm2"
 # impMet  <- metReg
-fVar <- "_allFates"
-uVar <- "_UHisU"
-if(UHisH) uVar <- "_UHisH" 
-if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
+fVar <- ""
+uVar <- ""
+if(test_UH_fates){
+  fVar <- "_allFates"
+  uVar <- "_UHisU"
+  if(UHisH) uVar <- "_UHisH" 
+  if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
+}
 ```
 
 ### b. Create scaled dataframes:
@@ -276,20 +291,17 @@ if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more 
 ```{r scale-df, echo=TRUE}
 # ndGLM_scl <- ndGLM1 %>%
 ndGLM_scl_red <- ndGLM_red %>%
-  select(all_of( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int )) %>% 
-  mutate(across(predictors, function(x) as.numeric(scale(x,scale=F)))) #%>%
+  # select(all_of( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int )) %>% 
+  select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>%
+  mutate(across(all_of(predictors), function(x) as.numeric(scale(x,scale=F)))) #%>%
 
 ndGLM_scl <- ndGLM_ %>%
-  select(all_of( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int )) %>% 
-  # select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>%
-  mutate(across(predictors, function(x) as.numeric(scale(x,scale=F)))) #%>%
+  # select(all_of( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int )) %>% 
+  select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>%
+  mutate(across(all_of(predictors), function(x) as.numeric(scale(x,scale=F)))) #%>%
 
 ndGLM_scl_cc <- ndGLM_scl %>% remove_na(allNA = ndGLM_miss)
 
-saveRDS(ndGLM_, "dataframes/ndGLM_.rds")
-rm(ndGLM_)
-saveRDS(ndGLM_red, "dataframes/ndGLM_red.rds")
-rm(ndGLM_red)
 ```
 
 ### c. Define the models that will be compared:
@@ -316,16 +328,23 @@ modList
 
 ```
 
-### d. If needed, create the complete cases dataframe (not scaled/centered)
+### d. For reference, create the complete cases dataframe (not scaled/centered)
 
-```{r rem-NA, include=FALSE}
-if(centered==FALSE){
-  ndGLM_cc <- ndGLM_  %>%
-    select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>% 
-    remove_na(allNA = ndGLM_miss)
-  # colSums(is.na(ndGLM_cc))
-  print_vars(ndGLM_cc)
-  datName      <- "ndGLM_cc"
+```{r rem-NA}
+# if(centered==FALSE){
+ndGLM_cc <- ndGLM_  %>%
+  select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>% 
+  remove_na(allNA = ndGLM_miss)
+# colSums(is.na(ndGLM_cc))
+print_vars(ndGLM_cc)
+datName      <- "ndGLM_cc"
+# }
+str(ndGLM_cc)
+if(centered){ # remove the unscaled/uncentered dfs, but save in case needed
+  saveRDS(ndGLM_, "dataframes/ndGLM_.rds")
+  rm(ndGLM_)
+  saveRDS(ndGLM_red, "dataframes/ndGLM_red.rds")
+  rm(ndGLM_red)
 }
 ```
 
