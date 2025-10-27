@@ -20,6 +20,7 @@ cat("data used for plotting/tables:", datName)
 
 fVar <- "_allFates"
 uVar <- "_UHisU"
+# naVar <- naRm
 if(UHisH) uVar <- "_UHisH" 
 if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
 
@@ -39,12 +40,13 @@ if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more 
 # knitr::include_graphics(paste0("analysis/",frTabInitial), 
                         # dpi=(1300/6)) # dpi setting = only thing that works
 if(tab1 == TRUE | tab2 == TRUE){
-  suff <- paste0("_",datName,uVar, fVar)
+  # suff <- paste0("_",datName,uVar, fVar)
+  suff <- paste(datName, fVar, sep="_")
   # tabbbb <- fr_tab(ndGLM_cc, vars="HF_mis",suffix = suff)
-  tabbbb <- fr_tab(dat, vars="HF_mis",suffix = suff)
+  tabbbb <- mk_fr_tab(dat, vars="HF_mis",suffix = suff)
   # why does the complete cases dataframe have missing values for HF_mis?
-  knitr::include_graphics(paste0("analysis/",tabbbb), 
-                          dpi=(1300/6)) # dpi setting = only thing that works
+  # knitr::include_graphics(paste0("analysis/",tabbbb), 
+  knitr::include_graphics(tabbbb,  dpi=(1300/6)) # dpi setting = only thing that works
 } else {
   cat("\t\t>> skip")
 }
@@ -60,18 +62,29 @@ if(tab1 == TRUE | tab2 == TRUE){
 #### more tables
 
 ```{r, results='asis'}
+# table(ndGLM_red$field_fate)
+# cat("camera fate of nests marked unknown in the field:\n")
+# ndGLM_red %>% filter(field_fate=="U") %>% group_by(cam_fate) %>% summarize(sum = n())
+# cat("true cause of failure for failed (unknown) nests:\n")
+# ndGLM_red %>% filter(field_fate == "F") %>% group_by(cam_fate) %>% summarize(sum=n())
+# cat("marked failed (known cause) but reclassified:\n")
+# ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "Ca") & misclass==1) %>% select(nest, species, field_fate, cam_fate) 
+# cat("marked hatched but reclassified as failed:\n") # only field fate was consolidated to 6 categories
+# ndGLM_red %>% filter(field_fate == "H" & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
+# cat("marked failed but reclassified as hatched:\n")
+# ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "F", "Ca") & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
 
-table(ndGLM_red$field_fate)
+table(dat$field_fate)
 cat("camera fate of nests marked unknown in the field:\n")
-ndGLM_red %>% filter(field_fate=="U") %>% group_by(cam_fate) %>% summarize(sum = n())
+dat %>% filter(field_fate=="U") %>% group_by(cam_fate) %>% summarize(sum = n())
 cat("true cause of failure for failed (unknown) nests:\n")
-ndGLM_red %>% filter(field_fate == "F") %>% group_by(cam_fate) %>% summarize(sum=n())
+dat %>% filter(field_fate == "F") %>% group_by(cam_fate) %>% summarize(sum=n())
 cat("marked failed (known cause) but reclassified:\n")
-ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "Ca") & misclass==1) %>% select(nest, species, field_fate, cam_fate) 
+dat %>% filter(field_fate %in% c("A", "D", "Hu", "S", "Ca") & misclass==1) %>% select(nest, species, field_fate, cam_fate) 
 cat("marked hatched but reclassified as failed:\n") # only field fate was consolidated to 6 categories
-ndGLM_red %>% filter(field_fate == "H" & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
+dat %>% filter(field_fate == "H" & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
 cat("marked failed but reclassified as hatched:\n")
-ndGLM_red %>% filter(field_fate %in% c("A", "D", "Hu", "S", "F", "Ca") & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
+dat %>% filter(field_fate %in% c("A", "D", "Hu", "S", "F", "Ca") & HF_mis==1) %>% select(nest, species, field_fate, cam_fate)
 ```
 
 ```{r}
@@ -163,7 +176,7 @@ if(corrplots1 | hist1 | corrplots2 | hist2){
 
 #### question 1
 
-```{r is_u-hist-1, eval=FALSE, include=FALSE}
+```{r is_u-hist-1}
 
   # dat <- dat %>%
   #   # mutate(across(c(nest_age, fdate, obs_int), as.integer)) %>%
@@ -201,7 +214,7 @@ if(hist1 | hist2){
 #### question 2
 
 
-```{r HF_mis-plot-1, eval=FALSE, include=FALSE}
+```{r HF_mis-plot-1}
 # badNest <- ndGLM1$nest[ndGLM1$obs_int>12]
 if(hist1 | hist2){
   catPlotM <- plot_predictors(resp="HF_mis",
@@ -241,7 +254,7 @@ if(hist1 | hist2){
 
 
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 catPlotSp <- plot_predictors(resp="species",
                              dat=dat,
                              vars = predictors,
@@ -264,15 +277,16 @@ catPlotSp <- plot_predictors(resp="species",
 
 #### true fate
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-names(cbPalette) <- unique(ndGLM_$cam_fate)
+# names(cbPalette) <- unique(ndGLM_$cam_fate)
+names(cbPalette) <- unique(dat$cam_fate)
 catPlotSp <- plot_predictors(resp="cam_fate",
                              dat=dat,
                              vars = predictors,
                              filTit    = "Species",
                              # filLabs   = unique(ndGLM_$cam_fate),
-                             # filLabs   = names(cbPalette),
+                             filLabs   = names(cbPalette),
                              filColors = cbPalette,
                              xLabs     = prLabs,
                              yLab      = "Count",
@@ -327,7 +341,8 @@ if(corrplots1 | corrplots2){
   # ggsave(filename=paste0("corrPlot", now, ".svg"))
   pl
   
-  now = format(Sys.time(), "_%m%d_%H%M_")
+  # now = format(Sys.time(), "_%m%d_%H%M_")
+  now = format(Sys.time(), "_%m%d_")
   
   fname <- paste0(homeDir, "glm_script/figures/corr_plot_cc_", now, ".svg")
   # ggsave(fname, plot=pl, width=9, height=3)

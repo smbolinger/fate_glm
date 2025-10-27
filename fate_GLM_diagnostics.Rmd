@@ -177,6 +177,7 @@ if(missing_diag){
   # ggsave("missing_data.png", plot=missPl)
   tabNames <- list()
   # for(v in seq_along(exp_miss)){
+  # which(exp_index)
   for(v in which(exp_index)){ # use the index for the vars withint expl
     # v=1
     # expl[v]
@@ -193,26 +194,36 @@ if(missing_diag){
     # print(missTab)
     titl <- names(missTab)[1]
     names(missTab) <- c("var", "val", "not_missing", "missing", "p")
-    missTabFancy <- missTab %>%
+    # missTabFancy <- missTab %>%
+    missTab <- missTab %>%
       gt::gt(rowname_col = "var") %>%
       gt::tab_header(title=titl) %>%
       gt::cols_label(val ~ "",
                  not_missing ~ "Not missing (percent)",
                  missing ~ "Missing (percent)",
-                 p ~ "p-value") %>%
+                 p ~ "p-value") 
       # nestGLM::save_tab(suffix=paste(dName,dep,expl[v],uVar,sep="_"), rtf=TRUE)
       # nestGLM::save_tab(suffix=paste(datName,expl[v],uVar,sep="_"),dir = homeDir, rtf=TRUE)
-      save_tab(suffix=paste(datName,expl[v],uVar,sep="_"),dir = homeDir, rtf=TRUE)
+    suff <- expl[v]
+    outd <- paste0(homeDir,"/out")
+    # save_tab(tabName = "missTab", suffix=paste(datName,expl[v],uVar,sep="_"),dir = homeDir, rtf=TRUE)
+    # save_tab(tabName = "missTab", suffix=suff, outdir=outd, rtf=rtfOn)
+    save_tab(tab = missTab, suffix=suff, outdir=outd, rtf=rtfOn)
     tabNames[v] <- missTab
     for(i in seq_along(dep)){
-    missPP <- ndDiag %>%
-      finalfit::missing_pairs(dependent = dep[i],
-                              explanatory = expl,
-                              position = "fill")
+      missPP <- ndDiag %>%
+        finalfit::missing_pairs(dependent = dep[i],
+                                explanatory = expl,
+                                position = "fill")
+      suff <- paste(expl[v], dep[i], sep="_")
+      pat  <- paste0(homeDir,"/figures")
+      fname <- make_fname("missPP",suff,".svg", nowDigits = "none")
+      ggsave(plot=missPP, filename = fname, path = pat)
     }
-    now = format(Sys.time(), "_%m%d_%H%M_")
-    fname <- paste0(homeDir,"figures/pp_",datName,dep[i],expl[v],uVar,now,".svg")
-    ggsave(plot=missPP, filename = fname)
+    # now = format(Sys.time(), "_%m%d_%H%M_")
+    # fname <- paste0(homeDir,"figures/pp_",datName,dep[i],expl[v],uVar,now,".svg")
+    # fname <- make_fname("missPP")
+    # ggsave(plot=missPP, filename = fname)
   }
   
   # dName <- "ndGLM1"

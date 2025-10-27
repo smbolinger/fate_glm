@@ -87,7 +87,7 @@ print_stuff <- function(ndGLM2){
 
 
 # fr_tab <- function(ndata, vars=c("HF_mis","misclass","is_u")){
-fr_tab <- function(ndata, vars="all", suffix="", debug=F){
+mk_fr_tab <- function(ndata, vars="all", suffix="", debug=F){
 
   pre1 <- ndata |>
     dplyr::mutate(HF_mis = HF_mis == 1) %>%                            # response var # 1
@@ -143,20 +143,28 @@ fr_tab <- function(ndata, vars="all", suffix="", debug=F){
                                tab_spanner = c("**Marked unknown**",
                                                "**Misclassified (H/F)**"))
 
-  } else print("invalid argument - vars")
+  } else {
+    print("invalid argument - vars")
+  }
 
-  pr <- pr %>%
+  fr_tab <- pr %>%
     gtsummary::as_gt() %>%
     gt::tab_options(table.width = gt::pct(40))
-  now = format(Sys.time(), "%m%d_%H%M_")
+
+  outd <- paste0(homeDir,"/out/")
+  # can't just pass the name or it can't find the table itself?
+  # filename <- save_tab("fr_tab1",outdir=outd, suffix = suffix,rtf = rtfOn)
+  filename <- save_tab(fr_tab,outdir=outd, suffix = suffix,rtf = rtfOn)
+  # now = format(Sys.time(), "%m%d_%H%M_")
   # filename <- ifelse(
   #   "2021" %in% year,
   #   sprintf("frtab_inc2021_%s.png", now),
   #   sprintf("frtab_no2021_%s.png", now)
   # )
-  filename2 <- sprintf("fr_tab_%s_%s.rtf", now, suffix)
+  # filename2 <- sprintf("fr_tab_%s_%s.rtf", now, suffix)
+  # filename2 <- make_fname("fr_tab", suffj)
   # pr %>% gt::gtsave(filename=filename, path="analysis/", vwidth=1200, vheight=800)
-  pr %>% gt::gtsave(filename=filename2, path="analysis/", vwidth=1200, vheight=800)
+  # pr %>% gt::gtsave(filename=filename2, path="analysis/", vwidth=1200, vheight=800)
 
   return(filename)
 }
@@ -172,7 +180,7 @@ plot_predictors <- function(resp, dat, vars,
                      #               var2=NULL,
                      #               var3=NULL,
                      xMaxVect, binWidthVect=c(0,0,0), nBins=6,
-                     suffix="", dir="figures"){
+                     suffix="", dir="/figures/"){
   # numBreaks=5){
 # maybe making this needlessly complicated....
 # but I can make a more general plotting function later
@@ -239,20 +247,26 @@ plot_predictors <- function(resp, dat, vars,
 
 
   print(combPl)
-  now = format(Sys.time(), "_%m%d_%H%M_")
+  # now = format(Sys.time(), "_%m%d_%H%M_")
+  now = format(Sys.time(), "_%m%d_")
   # datName <- deparse(substitute(dat))
   # datName <- rlang::as_label(enexpr(!!dat))
   # fname <- paste0("catplot_",resp,"-",datName,now,suffix)
-  fname <- paste0(dir,"/catplot_",resp,now,suffix,".svg")
+  # fname <- paste0(dir,"/catplot_",resp,now,suffix,".svg")
+  fname <- paste0("catplot_",resp,suffix,now,".svg")
+  # outd <- paste0(homeDir, dir)
+  # paste(homeDir, dir)
   # ggsave("catplot_isu_NAremoved.svg",
   ggplot2::ggsave(fname,
-         # plot=catPlotU,
-         plot= combPl,
-         device="svg",
-         width=24,
-         height=8,
-         units="cm"
-  )
+                  # path = paste0(homeDir,dir),
+                  path = paste0(homeDir,dir),
+                  # plot=catPlotU,
+                  plot= combPl,
+                  device="svg",
+                  width=24,
+                  height=8,
+                  units="cm"
+                  )
   # return(combPl)
   return(fname)
 }
@@ -288,6 +302,50 @@ suppress_warnings <- function(.expr, .f, ...) {
     })
   ))
 }
+
+############## FILE NAMES ################################################
+# make_fname <- function(dir, name, suffix, extension, nowDigits=6){
+make_fname <- function( name, suffix, extension, nowDigits="long"){
+  if(nowDigits=="long") {
+    now = format(Sys.time(), "%m%d_%H%M")
+  } else if (nowDigits=="short") {
+    now = format(Sys.time(), "%m%d")
+  } else {
+    now = ""
+  }
+  # fname <- paste0(name, suffix, now, extension)
+  fname <- paste0(paste(name, suffix, now, sep="_"), extension)
+  return(fname)
+}
+############## SAVE TABLES ###############################################
+save_tab <- function(tab, dpi=(1800/6), outdir, suffix="", rtf=FALSE){
+
+  # now = format(Sys.time(), "_%m%d_%H%M%S") # seconds bc tables all generated in < 1 min
+  nm  <- function(x) deparse(substitute(x)) 
+  # tab <- get(tabName)
+  # dpi      <- (1800/6)                          # img width (px) / desired img width (in)
+  if(rtf){
+    # file_name <- paste0(nm(tab), suffix, now, ".rtf") # name of tab will always be tab within the function?
+    # file_name <- make_fname(tabName, suffix, ".rtf", nowDigits="short")
+    file_name <- make_fname(nm(tab), suffix, ".rtf", nowDigits="short")
+    # gt::gtsave(tab, file_name, path=paste0(dir,"out/"))
+    gt::gtsave(tab, file_name, path=outdir)
+  }
+
+  # file_name1 <- paste0(nm(tab), now, suffix, ".png")
+  file_name1 <- make_fname(nm(tab), suffix, ".png", nowDigits="short")
+  # gt::gtsave(tab, file_name1, path=paste0(dir,"out/"))
+  gt::gtsave(tab, file_name1, path=outdir)
+  
+
+  # file_name2 <- paste0(nm(tab), now, "_rounded.png")
+  # tab2 <- tab %>% fmt_number(decimals=2)
+  # gtsave(tab2, file_name2, path-"analysis/")
+  fn <- paste0(outdir,file_name1)
+  # return(file_name1) # return name of png to add to knit output
+  return(fn) # return name of png to add to knit output
+}
+
 # 
 # withCallingHandlers({
 #   x <- 0

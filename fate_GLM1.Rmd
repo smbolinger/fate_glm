@@ -18,8 +18,8 @@ params:
   resp1: "is_u"
   resp2: "HF_mis"
   imp: "all"
+  n_run: 500 
   imp_met: "pmm"
-  n_run: 2
   home_dir: "/home/wodehouse/projects/fate_glm/"
   data_file: "clean_data.csv"
 ---
@@ -93,11 +93,11 @@ source("edit_model_data.R")
 ### c. Data settings, home directory location, etc: 
 
 ```{r other-settings, echo=FALSE}
-sett = params$sett
+sett = params$sett # not used for anything rn
 missing_diag = params$miss_diag
 separation = params$sep_diag
-plt = params$plots
-deb = params$debug
+# plt = params$plots
+debug = params$debug
 # typ = params$type
 nrun=params$n_run
 homeDir = params$home_dir
@@ -171,7 +171,7 @@ rm(nd)
 ### a. Plots/frequency tables
 
 ```{r}
-datName <- "ndGLM1"
+datName <- "ndGLM1" # can help to have the data name as a string for saving in file names, esp if comparing multiple datasets
 prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
 if(sum(plsettings1 == 0)) cat(">> skip")
 ```
