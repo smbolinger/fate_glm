@@ -59,6 +59,37 @@
       "NeedsCompilation": "no",
       "Author": "Marc J. Mazerolle [aut, cre] (<https://orcid.org/0000-0002-0486-0310>)"
     },
+    "CALIBERrfimpute": {
+      "Package": "CALIBERrfimpute",
+      "Version": "1.0-7",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Multiple Imputation Using MICE and Random Forest",
+      "Date": "2022-11-17",
+      "Authors@R": "c(person(\"Anoop\", \"Shah\", role=c(\"aut\", \"cre\"), email=\"anoop@doctors.org.uk\"), person(\"Jonathan\", \"Bartlett\", role=\"ctb\"), person(\"Harry\", \"Hemingway\", role=\"ths\"), person(\"Owen\", \"Nicholas\", role=\"ths\"), person(\"Aroon\", \"Hingorani\", role=\"ths\"))",
+      "Description": "Functions to impute using random forest under full conditional specifications (multivariate imputation by chained equations). The methods are described in Shah and others (2014) <doi:10.1093/aje/kwt312>.",
+      "License": "GPL-3",
+      "Depends": [
+        "mice (>= 2.20)"
+      ],
+      "Imports": [
+        "mvtnorm",
+        "randomForest"
+      ],
+      "Suggests": [
+        "missForest",
+        "rpart",
+        "survival",
+        "xtable",
+        "ranger"
+      ],
+      "Author": "Anoop Shah [aut, cre], Jonathan Bartlett [ctb], Harry Hemingway [ths], Owen Nicholas [ths], Aroon Hingorani [ths]",
+      "Maintainer": "Anoop Shah <anoop@doctors.org.uk>",
+      "BuildVignettes": "TRUE",
+      "NeedsCompilation": "no",
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
+    },
     "DBI": {
       "Package": "DBI",
       "Version": "1.2.3",
@@ -6140,6 +6171,30 @@
       "NeedsCompilation": "yes",
       "Author": "Thomas Lin Pedersen [cre, aut] (<https://orcid.org/0000-0002-5147-4711>), Maxim Shemanarev [aut, cph] (Author of AGG), Tony Juricic [ctb, cph] (Contributor to AGG), Milan Marusinec [ctb, cph] (Contributor to AGG), Spencer Garrett [ctb] (Contributor to AGG), Posit, PBC [cph, fnd]",
       "Repository": "CRAN"
+    },
+    "randomForest": {
+      "Package": "randomForest",
+      "Version": "4.7-1.2",
+      "Source": "Repository",
+      "Title": "Breiman and Cutlers Random Forests for Classification and Regression",
+      "Date": "2022-01-24",
+      "Depends": [
+        "R (>= 4.1.0)",
+        "stats"
+      ],
+      "Suggests": [
+        "RColorBrewer",
+        "MASS"
+      ],
+      "Authors@R": "c(person(\"Leo\", \"Breiman\", role = \"aut\", comment = \"Fortran original\"), person(\"Adele\", \"Cutler\", role = \"aut\", comment = \"Fortran original\"), person(\"Andy\", \"Liaw\", role = c(\"aut\", \"cre\"), email = \"andy_liaw@merck.com\", comment = \"R port\"), person(\"Matthew\", \"Wiener\", role = \"aut\", comment = \"R port\"))",
+      "Description": "Classification and regression based on a forest of trees using random inputs, based on Breiman (2001) <DOI:10.1023/A:1010933404324>.",
+      "License": "GPL (>= 2)",
+      "URL": "https://www.stat.berkeley.edu/~breiman/RandomForests/",
+      "NeedsCompilation": "yes",
+      "Repository": "CRAN",
+      "Author": "Leo Breiman [aut] (Fortran original), Adele Cutler [aut] (Fortran original), Andy Liaw [aut, cre] (R port), Matthew Wiener [aut] (R port)",
+      "Maintainer": "Andy Liaw <andy_liaw@merck.com>",
+      "Encoding": "UTF-8"
     },
     "rappdirs": {
       "Package": "rappdirs",
