@@ -110,11 +110,11 @@ mods4sim <- modList[c(1,8,16) ]
 # mods4sim <- modList[c(1,8) ]
 names(mods4sim) <- c("m1", "m8", "m16")
 # names(mods4sim) <- c("m1", "m8")
-if(FALSE){
-  z <- 3
-  # r <- "is_u"
-  r <- "HF_mis"
-}
+# if(FALSE){
+#   z <- 3
+#   # r <- "is_u"
+#   r <- "HF_mis"
+# }
 # mods4sim
 for(z in seq_along(mods4sim)){
   # , cat("\n>>model:", names(model), model)
@@ -148,7 +148,9 @@ for(z in seq_along(mods4sim)){
     biasfile1 <- paste0(hdir, sprintf("out/bias_vals_%s_%s_%s.csv", r, names(mods4sim)[z], params$suffix))
     # biasfile1
     # write.csv(bias_out, file = sprintf("out/bias_vals_%s_%s.csv", r, names(mods4sim)[z]))# write to csv in case script aborts 
-    write.csv(bias_out, file = biasfile1, row.names = FALSE)# write to csv in case script aborts 
+    # write.csv(bias_out, file = biasfile1, row.names = FALSE)# write to csv in case script aborts 
+    ## NOTE - NEED ROW NAMES - that's where the param names are stored |> 
+    write.csv(bias_out, file = biasfile1)# write to csv in case script aborts 
     cat("\n\n********************************************************************************************\n")
     cat(">>>>> BIAS VALUES: \n")
     cat("********************************************************************************************\n")
