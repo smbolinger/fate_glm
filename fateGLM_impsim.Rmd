@@ -7,10 +7,11 @@ output:
     code_folding: hide
   pdf_document: default
 params:
-  nrun: 10
+  nrun: 100
   debug: FALSE
   home_dir: "/home/wodehouse/projects/fate_glm/"
   linux: FALSE
+  suffix: "100reps"
 ---
 
 ```{r setup, include=FALSE}
@@ -25,8 +26,6 @@ source("mice_functions.R")
 source("imp_sim_functions.R")
 source("missing_data.R")
 
-hdir <- params$home_dir
-if(params$linux==FALSE) hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/"
 ```
 
 
@@ -70,6 +69,13 @@ if(FALSE){
 nrun <- params$nrun
 debug <- params$debug
 mod4sim <- modList[1]
+hdir <- params$home_dir
+
+if(params$linux==FALSE){
+  hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
+  nrun <- 10
+  suffix <- "10reps"
+}
 
 # var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age") # just the vars w/ missing data or interactions
 var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int", "obs_int", "fdate") # all vars
@@ -136,10 +142,11 @@ for(z in seq_along(mods4sim)){
     # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
     bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
     # biasfile <- paste0(params$home_dir, sprintf("out/bias_vals_%s_%s.rds", r, names(mods4sim)[z]))
-    biasfile <- paste0(hdir, sprintf("out/bias_vals_%s_%s.rds", r, names(mods4sim)[z]))
+    biasfile <- paste0(hdir, sprintf("out/bias_vals_%s_%s_%s.rds", r, names(mods4sim)[z], params$suffix))
     # saveRDS(bias_out, sprintf("out/bias_vals_%s_%s.rds",r, names(mods4sim)[z]))
     saveRDS(bias_out, biasfile)
-    biasfile1 <- paste0(hdir, sprintf("out/bias_vals_%s_%s.csv", r, names(mods4sim)[z]))
+    biasfile1 <- paste0(hdir, sprintf("out/bias_vals_%s_%s_%s.csv", r, names(mods4sim)[z], params$suffix))
+    # biasfile1
     # write.csv(bias_out, file = sprintf("out/bias_vals_%s_%s.csv", r, names(mods4sim)[z]))# write to csv in case script aborts 
     write.csv(bias_out, file = biasfile1, row.names = FALSE)# write to csv in case script aborts 
     cat("\n\n********************************************************************************************\n")
