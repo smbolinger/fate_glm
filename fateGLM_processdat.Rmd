@@ -1,0 +1,128 @@
+---
+title: "process_data"
+author: "Sarah Bolinger"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+  pdf_document: default
+params:
+  home_dir: "C:/Users/sarah/Dropbox/Models/fate_glm"
+  data_file: "clean_data.csv"
+  missing_diag: TRUE
+  separation: TRUE
+  debug: TRUE
+  plots1: TRUE
+  plots2: TRUE
+  rtf: TRUE
+---
+
+## 0. SETUP
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(knitr.duplicate.label = "allow")
+library(gt)
+library(gtsummary)
+library(tidyverse)
+```
+
+```{r}
+missing_diag <- params$missing_diag
+separation <- params$separation
+homeDir <- params$home_dir
+rtfOn <- params$rtf
+```
+
+```{r, include=FALSE}
+source("edit_model_data.R") # load functions
+source("fateGLM_settings.R")
+source("visualize_data.R")
+source("missing_data.R")
+```
+
+
+## 1. DATA
+
+### a. Load cleaned data:
+
+```{r load-data, echo=FALSE, message=FALSE}
+  # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
+  # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
+filename <- params$data_file
+cat("importing from:",filename,"\n\n")
+# nData <- read_csv(filename)[-1]
+nData <- read_csv(filename) # To run python code, need reticulate package.
+```
+
+### b. Filter the data:
+
+```{r filter-data}
+nData$fdate      <- nData$final_obs_date
+nData$obs_int    <- nData$final_obs_int
+
+nd <- nData %>%
+  filter(nest!=20365) %>%  # found on hatch day
+  filter( nest!=20259) %>% # NA for final_obs_int (not tracked to fate)
+  filter_dat1(cam_vect=cam_str, debug=params$debug,  # filters for cam by default
+              grouped=grouped, spp=spp_sel, sites=sites_sel)
+rm(nData)
+
+```
+
+How many NAs should there be in (camera) nest fate?
+  2021: 2           2020: 5          2019: 6
+
+and nest age (of the remaining nests)?
+  2021: 13          2020: 1          2019: 2
+
+### c. Deal with UH/UF fate values:
+
+```{r UHFisHF}
+# if(any(nd$field_fate == "U-H" | nd$field_fate == "U-F")) nd <- uhf_calc(nd, debug=TRUE)
+if(any(nd$field_fate == "U-H" | nd$field_fate == "U-F")) nd <- uhf_calc(nd, debug=params$debug)
+```
+
+### d. Add the response vars, and print them:
+
+```{r add-response, echo=TRUE}
+ndGLM1 <- as.data.frame(add_vars(nd, debug=params$debug))
+ndGLM1 <- ndGLM1 %>% select(nest, species, field_fate, cam_fate, final_fate, estHD, k_adj, fdate, nest_age, obs_int, how_mis, HF_mis, misclass, is_u, hatchfail, c_hatchfail, fate, cfate)
+# if(TRUE){
+if(FALSE){
+  ndGLM1 %>% select(nest, species, field_fate, cam_fate, fate, cfate, hatchfail, c_hatchfail, HF_mis, is_u) %>% write.csv(paste0("fates",now,".csv"))
+}
+print_vars(ndGLM1)
+saveRDS(ndGLM1, "dataframes/ndGLM1.rds")
+# saveRDS(nd, "nd.rds")
+rm(nd)
+```
+------------------------------------------------------------------------
+
+## 2. DIAGNOSTICS  
+
+### a. Plots/frequency tables
+
+```{r}
+datName <- "ndGLM1" # can help to have the data name as a string for saving in file names, esp if comparing multiple datasets
+prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
+# if(sum(plsettings1 == 0)) cat(">> skip")
+```
+
+```{r plots_tables1, child=if(tab1 | hist1 | corrplots1) 'fate_GLM_plots_tables.Rmd'}
+```
+
+### b. Evaluate missing data, presence of separation
+
+```{r}
+if(missing_diag == FALSE & separation == FALSE) cat(">> skip")
+```
+
+```{r missing_sep2, child=if(params$missing_diag | params$separation) 'fate_GLM_diagnostics.Rmd'}
+```
+
+
+
+
+
+

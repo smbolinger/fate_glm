@@ -1,0 +1,430 @@
+---
+title: "Nest GLM"
+author: "Sarah Bolinger"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    code_folding: hide
+  pdf_document: default
+editor_options:
+  markdown:
+    wrap: 72
+params:
+  miss_diag: FALSE
+  sep_diag: FALSE
+  plots: FALSE
+  debug: FALSE
+  sett: "default"
+  resp1: "is_u"
+  resp2: "HF_mis"
+  imp: "all"
+  n_run: 500 
+  imp_met: "pmm"
+  home_dir: "/home/wodehouse/projects/fate_glm/"
+  data_file: "clean_data.csv"
+---
+
+## Introduction
+
+What to do with this script:
+----------------------------------------------------------------------------------------
+
+1. Choose the data to load under section 1a
+2. Decide how many categories you want to use for nest fate in section 1e
+3. Check the models that will be fitted in section 3
+
+I think it makes sense to keep the filtering function in the code for now? Easier to
+edit it on the fly. Also, some of the dplyr stuff gets a little dicey in a custom package. 
+Specifically, lines with across and last, like this:
+              across(where(is.integer), last), # now they are all chr
+              
+              
+Child documents referenced in the script: 
+
+- fate_GLM_plots_tables.Rmd
+- fate_GLM_diagnostics.Rmd
+
+*NOTE* remember to change variable names in these documents, if needed!
+
+Data is stored in "nest_models/cleaned_data" directory; 
+  most recent data filename is stored in "import_name.txt" within that directory
+
+fate_GLM_extra.Rmd has other related functions that I'm not currently using
+fate_GLM_notes.txt has old notes from this script plus others about it and/or the data
+
+----------------------------------------------------------------------------------------
+
+## 0. SETUP
+
+### a. Load packages; set rmarkdown options
+If you try to knit a child doc twice, it fails bc of the "duplicate labels" bullshit.
+but also, I don't need to run the missing/separation child twice
+
+```{r setup, include=FALSE}
+# remove(list=ls())
+knitr::opts_chunk$set(echo = TRUE)
+options(knitr.duplicate.label = "allow")
+# library(AICcmodavg)
+library(bbmle)
+library(brglm2) # penalized logistic regression
+# library(car)
+library(CALIBERrfimpute) # could access using ::
+library(gt)
+library(gtsummary)
+# library(nestGLM)
+library(stats)
+library(tidyverse)
+# library(visdat)   # visualize all data and number missing
+# old_code.Rmd also has packages used in older versions of the script
+```
+
+### b. Create functions
+
+```{r functions, echo=TRUE}
+# source("imp_sim_functions.R")
+source("missing_data.R")
+source("fit_models.R")
+source("visualize_data.R")
+source("edit_model_data.R")
+# source("filter_dat.r")
+# source("UHF_fateGLM.R")
+```
+
+### c. Data settings, home directory location, etc: 
+
+```{r other-settings, echo=FALSE}
+sett = params$sett # not used for anything rn
+missing_diag = params$miss_diag
+separation = params$sep_diag
+# plt = params$plots
+debug = params$debug
+# typ = params$type
+nrun=params$n_run
+homeDir = params$home_dir
+homeDir = "C:/Users/sarah/Dropbox/Models/fate_glm/"
+source("fateGLM_settings.R")
+all_vars <- c(predictors, pred2 ,params$resp1, params$resp2)
+```
+
+##*
+------------------------------------------------------------------------
+
+## 1. DATA
+
+### a. Load processed data 
+
+```{r}
+ndGLM1 <- readRDS("dataframes/ndGLM1.rds")
+```
+
+
+------------------------------------------------------------------------
+### b. Edit and refactor the data:
+
+  - This is also the data that will be used to impute both cam_fate and nest_age (nothing removed)
+
+```{r}
+nfate=6
+  
+#### This reduces the number of fate categories and makes sure vars are numeric or factor:
+ndGLM_ <- ndGLM1 %>% set_var_types() %>% refactor(num_fate=nfate) 
+str(ndGLM_)
+# levels(ndGLM_$cam_fate)
+if (FALSE) ndGLM_ %>% sapply(function(x) sum(is.na(x)))
+ndGLM_$misclass[is.na(ndGLM_$misclass)] = 0  # there are sometimes weird missing values
+ndGLM_miss <- dat_miss(ndGLM1) # moved this elsewhere because it is used there
+saveRDS(ndGLM_, "dataframes/ndGLM_.rds")
+
+# saveRDS(ndGLM1, file="dataframes/ndGLM1.rds")
+# rm(ndGLM1)
+```
+
+### c. Remove cam fates from one subset
+
+#### This creates the dataset to be used for the imputation of nest age only (remove missing cam fate):
+
+```{r remove-NA-fate}
+ndGLM_red <- ndGLM_[!is.na(ndGLM_$cam_fate),]
+ndGLM_red <- ndGLM_red[ndGLM_red$cam_fate!="U",]
+str(ndGLM_red)
+saveRDS(ndGLM_red, "dataframes/ndGLM_red.rds")
+# saveRDS(ndGLM_, file="dataframes/ndGLM_.rds")
+# rm(ndGLM_)
+```
+
+##*
+------------------------------------------------------------------------
+
+## 2. VISUALIZE DATA AFTER REMOVING (cam_fate) NAs AND EDITING
+
+### a. Specify the name of the data being used so the file outputs are named accordingly.
+
+```{r names-2}
+datName <- "ndGLM_red"
+prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
+```
+
+b.Plots
+For some reason, taking out the line break in the middle of these chunks is upposed to fix duplicate label error:
+
+```{r plots_tables2, child=if(tab2 | hist2 | corrplots2) 'fate_GLM_plots_tables.Rmd'}
+if(sum(plsettings2 == 0)) cat(">> skip")
+```
+
+##*
+------------------------------------------------------------------------
+
+## 3. DATA, PART 2
+
+### a. Define the data and vars that will be used:
+
+Put the name of the dataframe so it can be used in the file naming.
+Also lets you choose the response variable for question 2 (HF_mis or misclass) and the method to use for the logistic regression
+
+```{r mod-data}
+centered <- TRUE
+
+datName        <- ifelse(centered, "ndGLM_scl_cc", "ndGLM_cc")
+if(centered){
+  datNameImp   <- ifelse(params$imp=="all", "ndGLM_scl", "ndGLM_scl_red")
+  # output is a list - because I didn't have the df names in quotes!
+  # if(params$imp=="all") datNameImp = ndGLM_scl else datNameImp=ndGLM_scl_red
+} else {
+  datNameImp   <- ifelse(params$imp=="all", "ndGLM_", "ndGLM_red")
+  # if(params$imp=="all") datNameImp = ndGLM_ else datNameImp=ndGLM_red
+}
+# datNameImp   <- "ndGLM_"
+# imp_age <- c("age", "nest_age")
+# if(params$imp=="all") datNameImp   <- "ndGLM_scl"
+# if(params$imp %in% imp_age) datNameImp   <- "ndGLM_scl_red"
+impMet <- params$imp_met
+resp1 <- params$resp1
+resp2 <- params$resp2
+# resp2   <- "misclass"
+# met     <- "glm.fit"
+# met     <- "jeffreys"
+metReg     <- "brglm2"
+# impMet  <- metReg
+fVar <- ""
+uVar <- ""
+if(test_UH_fates){
+  fVar <- "_allFates"
+  uVar <- "_UHisU"
+  if(UHisH) uVar <- "_UHisH" 
+  if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
+}
+```
+
+### b. Create scaled dataframes:
+
+```{r scale-df, echo=TRUE}
+# ndGLM_scl <- ndGLM1 %>%
+ndGLM_scl_red <- ndGLM_red %>%
+  # select(all_of( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int )) %>% 
+  select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>%
+  mutate(across(all_of(predictors), function(x) as.numeric(scale(x,scale=F)))) #%>%
+saveRDS(ndGLM_scl_red, "dataframes/ndGLM_scl_red.rds")
+
+ndGLM_scl <- ndGLM_ %>%
+  # select(all_of( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int )) %>% 
+  select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>%
+  mutate(across(all_of(predictors), function(x) as.numeric(scale(x,scale=F)))) #%>%
+saveRDS(ndGLM_scl, "dataframes/ndGLM_scl.rds")
+
+ndGLM_scl_cc <- ndGLM_scl %>% remove_na(allNA = ndGLM_miss)
+saveRDS(ndGLM_scl_cc, "dataframes/ndGLM_scl_cc.rds")
+
+ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"),
+                                          HF_mis = ifelse(HF_mis==1, "yes", "no"))
+# ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"))
+write.csv(ndGLM_scl_cc_1, "dat_complete.csv", row.names=FALSE)
+
+```
+
+### c. For reference, create the complete cases dataframe (not scaled/centered)
+
+```{r rem-NA}
+# if(centered==FALSE){
+ndGLM_cc <- ndGLM_  %>%
+  select( nest, is_u, HF_mis, misclass, species, cam_fate, nest_age, fdate, obs_int ) %>% 
+  remove_na(allNA = ndGLM_miss)
+# colSums(is.na(ndGLM_cc))
+print_vars(ndGLM_cc)
+datName      <- "ndGLM_cc"
+# }
+str(ndGLM_cc)
+if(centered){ # remove the unscaled/uncentered dfs, but already saved in case needed
+  rm(ndGLM_)
+  rm(ndGLM_red)
+}
+```
+
+### d. Define the models that will be compared:
+
+```{r formulas, echo=FALSE}
+prOrder <- c("species", "nest_age", "obs_int", "cam_fate", "fdate")
+inter <- c("species * nest_age")
+inter2 <- c("species * obs_int") # has to be a vector to work with expand_grid
+otherVar <- c("obs_int", "cam_fate", "fdate")
+otherVar2 <- c( "nest_age", "cam_fate", "fdate")
+
+combMod <- function(inter, otherVar){
+  combos <- append( append( list( otherVar), asplit(combn(otherVar, 2), MARGIN=2)), as.list(otherVar) )
+  cc <- lapply(combos, 
+               function(x) paste( inter, paste(x, collapse=" + "),  sep=" + ") )
+  return(cc)
+}
+
+mEffects <- paste(prOrder, collapse=" + ")
+andesEtAl <- paste(prOrder[-5], collapse=" + ")
+modList <- c(combMod(inter, otherVar), combMod(inter2, otherVar2), "1", mEffects, andesEtAl)
+modList <- paste("~", modList, sep=" ")
+modList
+
+```
+
+
+------------------------------------------------------------------------
+##*
+------------------------------------------------------------------------
+
+## QUESTION 1: What affects whether nest fate is classifiable from field evidence?
+
+AKA is there field evidence or not
+
+
+### Analysis (complete cases)
+
+*NOTE* Make sure there are no warnings - separation etc.
+
+#### Run the normal analysis:
+
+```{r q1, warning=FALSE}
+question <- "Was nest fate classifiable in the field?"
+quest   <- "_q1"
+# dat <- parse(datName) # this one appears to be for files
+dat <- get(datName)
+mods <- list()
+# resp   <- "is_u"
+resp   <- params$resp1 
+modList2 <- paste(resp, modList, sep=" ")
+# modList3 <- lapply(modList2, function(x) as.formula(x)) # what is benefit of formula type?
+```
+
+```{r q1_print, warning=FALSE, results='asis'}
+cat(question)
+cat("\n\nData used:", datName)
+cat("\n\nNumber of fate categories:", length(levels(dat$cam_fate)))
+cat("\n\nRESPONSE VAR:",resp, "\n\n")
+# cat("\n\nModels to fit:\n",paste(modList2, collapse="\n" ))
+```
+
+```{r q1_fit, warning=FALSE}
+# mods <- run_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
+mods <- fit_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
+```
+### CREATE AIC TABLES AND REGRESSION TABLES:
+
+```{r q1_aic, child="fate_GLM_AICc.Rmd"}
+```
+
+### USING THE IMPUTED DATASETS:
+
+Created the imputed datasets for this question, and analyze them
+
+```{r q1-impute, child="fate_GLM_imputation.Rmd"}
+
+```
+
+##*
+------------------------------------------------------------------------
+
+## QUESTION 2: How do the predictor vars affect classification accuracy?
+
+Response: HF_mis were nests correctly marked hatched/failed, or not
+
+*NOTE* MAYBE should be recast as "was nest hatch misclassified?" so that unknowns that were actually hatched count as misclassified but unknowns that were actually failed don't?
+
+```{r}
+# # remove nests that were marked unknown in the field:
+# ndGLM_scl_red <- ndGLM_scl %>% filter(fate != 7)
+# ndGLM_scl_redcc <- ndGLM_scl_cc %>% filter(fate != 7)
+# 
+# datName <- "ndGLM_scl_red"
+# prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
+
+```
+
+IF using the reduced data for question 2, print plots/tables again
+
+### Analysis (complete cases )
+
+#### Specify & run the analysis
+
+```{r q2, echo=TRUE}
+question <- "Was nest fate classified correctly in the field?"
+quest    <- "_q2"
+# datName <- "ndGLM_scl_redcc"
+dat <- get(datName)
+mods <- list()
+# resp   <- "HF_mis"
+resp   <- params$resp2 
+# resp   <- "misclass"
+```
+
+```{r q2_print, echo=TRUE, results='asis'}
+# cat("\n\nNumber of fate categories:", length(levels(ndGLM_2_cc$cam_fate)))
+cat(question)
+cat("\n\nData used:", datName)
+cat("\n\nNumber of fate categories:", length(levels(dat$cam_fate)))
+# mods <- run_models(dataMod=datList[[i]], resp="is_u", modlist=modList)
+cat("\n\nRESPONSE VAR:",resp,"\n\nMODELS:\n")
+# mods <- run_models(dataMod=dat, resp=resp, met="logistf", modlist=modList)
+# mods <- run_models(dataMod=dat, resp=resp, met="jeffreys", modlist=modList)
+# mods <- run_models(dataMod=dat, resp=resp2, met="glm.fit", modlist=modList)
+```
+
+```{r q2_fit, echo=TRUE}
+mods <- fit_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
+saveRDS(mods, "dataframes/mods.rds")
+saveRDS(modList, "dataframes/modList.rds")
+# mods <- run_models(dataMod=dat, resp=resp, met="brglm2", modlist=modList)
+# # intPlot <- 
+# sjPlot::set_theme(
+#   base=theme_classic()
+#   
+# )
+# sjPlot::plot_model(mods[[5]], type="int") +
+#   labs(x="Nest age (days)", y="Predicted probability \nof misclassification", title="Interaction Plot for Species and Nest Age")
+# 
+# # j+
+#   # theme_classic()
+
+
+#+
+ # scale_fill_manual(values = species,
+  #                  labels=c("Common\nNighthawk",
+   #                          "Least\nTern"))
+# intPlot
+```
+
+
+```{r echo=TRUE}
+```
+
+### CREATE AIC TABLES AND REGRESSION TABLES:
+
+```{r q2_aic, child="fate_GLM_AICc.Rmd"}
+```
+
+### USING THE IMPUTED DATASETS:
+
+Created the imputed datasets for this question, and analyze them
+
+```{r q2-impute, child="fate_GLM_imputation.Rmd"}
+
+```
+
+------------------------------------------------------------------------
+### end
+------------------------------------------------------------------------
