@@ -21,13 +21,6 @@ source("missing_data.R")
 # opt = getopt::getopt(spec = spec)
 
 params <- list(nrun=100, hdir="/home/wodehouse/projects/fate_glm/", deb=FALSE, lin=FALSE)
-if(params$lin==FALSE){
-  params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  params$nrun <-5 
-  # suffix <- "5reps"
-  # params$deb <- TRUE
-}
-
 # params <- list(nrun=100, deb=FALSE, lin=FALSE)
 arg <- commandArgs(trailingOnly=TRUE)
 if(length(arg)==0){
@@ -46,6 +39,13 @@ if(length(arg)==0){
     else if(a=="deb") params$deb <- TRUE
   }
 }
+if(params$lin==FALSE){
+  params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
+  params$nrun <-5
+  # suffix <- "5reps"
+  # params$deb <- TRUE
+}
+
 
 # nrun <- params$nrun
 # debug <- params$debug
