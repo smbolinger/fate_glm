@@ -73,9 +73,12 @@ hdir <- params$home_dir
 
 if(params$linux==FALSE){
   hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  nrun <- 10
-  suffix <- "10reps"
+  nrun <-5 
+  suffix <- "5reps"
+  debug <- TRUE
 }
+
+cat(">> home directory:", hdir, " & number of runs:", nrun, "& output suffix:", suffix)
 
 # var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age") # just the vars w/ missing data or interactions
 var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int", "obs_int", "fdate") # all vars
@@ -107,6 +110,7 @@ missing_tab("sim_dat",prVars,)
 # mods4sim <- modList[c(1,2,8,9,16) ]
 # could probably jsut create an index of the models you want and then seq_along the whole list. not sure which is faster
 mods4sim <- modList[c(1,8,16) ]
+mods4sim
 # mods4sim <- modList[c(1,8) ]
 names(mods4sim) <- c("m1", "m8", "m16")
 # names(mods4sim) <- c("m1", "m8")
