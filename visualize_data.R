@@ -151,7 +151,8 @@ mk_fr_tab <- function(ndata, vars="all", suffix="", debug=F){
     gtsummary::as_gt() %>%
     gt::tab_options(table.width = gt::pct(40))
 
-  outd <- paste0(homeDir,"/out/")
+  # outd <- paste0(homeDir,"/out/")
+  outd <- paste0(homeDir,"/tables/")
   # can't just pass the name or it can't find the table itself?
   # filename <- save_tab("fr_tab1",outdir=outd, suffix = suffix,rtf = rtfOn)
   filename <- save_tab(fr_tab,outdir=outd, suffix = suffix,rtf = rtfOn)
@@ -329,19 +330,19 @@ save_tab <- function(tab, dpi=(1800/6), outdir, suffix="", rtf=FALSE){
     # file_name <- make_fname(tabName, suffix, ".rtf", nowDigits="short")
     file_name <- make_fname(nm(tab), suffix, ".rtf", nowDigits="short")
     # gt::gtsave(tab, file_name, path=paste0(dir,"out/"))
-    gt::gtsave(tab, file_name, path=outdir)
+    gt::gtsave(tab, file_name, path=paste0(outdir,"tables/"))
   }
 
   # file_name1 <- paste0(nm(tab), now, suffix, ".png")
   file_name1 <- make_fname(nm(tab), suffix, ".png", nowDigits="short")
   # gt::gtsave(tab, file_name1, path=paste0(dir,"out/"))
-  gt::gtsave(tab, file_name1, path=outdir)
+  gt::gtsave(tab, file_name1, path=paste0(outdir,"tables/"))
   
 
   # file_name2 <- paste0(nm(tab), now, "_rounded.png")
   # tab2 <- tab %>% fmt_number(decimals=2)
   # gtsave(tab2, file_name2, path-"analysis/")
-  fn <- paste0(outdir,file_name1)
+  fn <- paste0(outdir,"tables/",file_name1)
   # return(file_name1) # return name of png to add to knit output
   return(fn) # return name of png to add to knit output
 }

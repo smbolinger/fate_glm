@@ -25,9 +25,10 @@ params <- list(nrun=100, hdir="/home/wodehouse/projects/fate_glm/", deb=FALSE, l
 arg <- commandArgs(trailingOnly=TRUE)
 if(length(arg)==0){
   # stop("at minimum, needs argument for 'lin' (T or F)")
-  cat("\n/////////////////////////////////////////////////////////////////////////////////////////////\n")
-  cat("\n** NOTE ** using default of linux = FALSE, nrun = 5, & debug = FALSE\n\n")
-  cat("/////////////////////////////////////////////////////////////////////////////////////////////\n\n")
+  cat("\n\n/////////////////////////////////////////////////////////////////////////////////////////////\n")
+  # cat("\n** NOTE ** using default of linux = FALSE, nrun = 3, & debug = FALSE\n\n")
+  cat("\n** NOTE ** no arguments provided - using default of linux = FALSE\n\n")
+  cat("/////////////////////////////////////////////////////////////////////////////////////////////\n\n\n")
   # print("\n** NOTE ** using default of linux = FALSE, nrun = 5, & debug = FALSE\n\n")
 } else if(length(arg) > 0){
   cat("arg =")
@@ -35,13 +36,13 @@ if(length(arg)==0){
   for(a in arg){
     # if(is.numeric(a)) params$nrun <- a
     if(grepl("^\\d+$", a)) params$nrun <- a
-    else if(a=="lin") params$lin <- TRUE
-    else if(a=="deb") params$deb <- TRUE
+    else if(a=="lin") params$lin       <- TRUE
+    else if(a=="deb") params$deb       <- TRUE
   }
 }
 if(params$lin==FALSE){
   params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  params$nrun <-5
+  params$nrun <-3
   # suffix <- "5reps"
   # params$deb <- TRUE
 }
@@ -60,6 +61,7 @@ mods4sim <- modList[c(1,8,16) ]
 # mods4sim <- modList[c(1,8) ]
 names(mods4sim) <- c("m1", "m8", "m16")
 
+# dat4sim <- read.csv("dat_complete_ff8.csv", stringsAsFactors = TRUE)
 dat4sim <- read.csv("dat_complete.csv", stringsAsFactors = TRUE)
 # make 'H' the reference category:
 dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H")
@@ -96,7 +98,7 @@ met_list <- c("default","pmm", "rf", "cart", "caliber","cc")# don't need full he
 # col_sel <- c(prVars,resp) # columns to select, as strings
 # cat("\n\n>> models to fit:\n", paste(mods4sim, collapse="\n"))
 cat("\n\n>> methods to test:", met_list)
-cat("\n\n>> bias to be calculated:", bias_names)
+cat("\n\n>> bias to be calculated:", bias_names, "\n")
 
 #########################################################################################
 #########################################################################################
@@ -106,11 +108,33 @@ sim_dat <- mkSimDat(nd = dat4sim, method = "amp", wt = TRUE, debug = params$deb,
 missing_tab("sim_dat",prVars,)
 
 # names(mods4sim) <- c("m1", "m8")
-# if(FALSE){
-#   z <- 3
-#   # r <- "is_u"
+if(FALSE){
+  z <- 1
+  r <- "is_u"
   # r <- "HF_mis"
-# }
+  params$deb <- TRUE
+  met_list <- c("default", "rf","cc") # can use fewer methods to make it faster
+  for(m in seq_along(mnames)){
+    # modnum = str_extract(mnames[m],"\\d+")
+    mod    = mods4sim[m]
+    fitReal <- glm(as.formula(paste0(r, mod)),
+                   # data=ndGLM_scl_cc,
+                   data=dat4sim,
+                   family=binomial,
+                   method=brglm2::brglm_fit)
+    # ,
+                   # control=brglmControl(maxit=iter) )
+    headr <- paste("Regression Summary for Model:",
+                   paste(r, mod, sep=" "), 
+                   collapse="\n"
+    )
+                   # modnames(list(x = mods[[modNum]]), null=FALSE), sep="\n")
+    tabReg <- gtsummary::tbl_regression(fitReal, exponentiate=TRUE) %>%
+      gtsummary::as_gt() %>%
+      gt::tab_header(title=headr)
+    print(tabReg)
+  }
+}
 # mods4sim
 for(z in seq_along(mods4sim)){
   # , cat("\n>>model:", names(model), model)
@@ -140,7 +164,11 @@ for(z in seq_along(mods4sim)){
     imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mods4sim[z], nruns=params$nrun, debug = params$deb) # don't want to set seed
     # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mod4sim,mets = met_list, biasVals = bias_names, debug = debug)
     # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
-    bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = params$deb)
+    cat("\n\n********************************************************************************************\n")
+    cat(">>>>> BIAS VALUES: \n")
+    cat("********************************************************************************************\n")
+    # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = params$deb)
+    bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, modnum = z, mets = met_list, biasVals = bias_names, debug = params$deb)
     # biasfile <- paste0(params$home_dir, sprintf("out/bias_vals_%s_%s.rds", r, names(mods4sim)[z]))
     # biasfile <- paste0(params$hdir, sprintf("out/bias_vals_%s_%s_%s_.rds", r, names(mods4sim)[z], params$suffix))
     biasfile <- paste0(params$hdir, sprintf("out/bias_vals_%s_%s_%s_.rds", r, names(mods4sim)[z], suffix))
@@ -153,11 +181,8 @@ for(z in seq_along(mods4sim)){
     ## NOTE - NEED ROW NAMES - that's where the param names are stored |> 
     write.csv(bias_out, file = biasfile1)# write to csv in case script aborts 
     # if(params$deb){
-    cat("\n\n********************************************************************************************\n")
-    cat(">>>>> BIAS VALUES: \n")
-    cat("********************************************************************************************\n")
     # }
-    print(bias_out) # print the output to console
+    # print(bias_out) # print the output to console
     # cat("\n******************************************************************************************\n")
   }
 }
