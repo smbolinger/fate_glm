@@ -8,7 +8,7 @@ output:
   pdf_document: default
 params:
   home_dir: "C:/Users/sarah/Dropbox/Models/fate_glm"
-  data_file: "clean_data.csv"
+  data_file: "grouped_0805_1225_ed2_20250906_1658.csv"
   missing_diag: TRUE
   separation: TRUE
   debug: TRUE
@@ -58,8 +58,11 @@ nData <- read_csv(filename) # To run python code, need reticulate package.
 ### b. Filter the data:
 
 ```{r filter-data}
+ff_val <- "field_fate9"
+nData[[ff_val]]
 nData$fdate      <- nData$final_obs_date
 nData$obs_int    <- nData$final_obs_int
+nDat$field_fate  <- nData[[ff_val]]
 
 nd <- nData %>%
   filter(nest!=20365) %>%  # found on hatch day

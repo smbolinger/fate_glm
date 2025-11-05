@@ -12,14 +12,26 @@ output: html_document
 # suffix = "_unscl_cc_q1"
 # suffix = paste0("_unscl_cc_q1_",nfate,"fates")
 # suffix = paste0("-",datName,"-q1-",uVar,fVar)
-suffix = paste0("-",datName,quest,uVar,fVar)
+# suffix = paste0(datName,quest,uVar,fVar,"ff10")
+# if(FALSE) ff_val <- "field_fate10"
+fVar <- "allFates"
+uVar <- "UHisU"
+ff_num <- str_extract(ff_val, "\\d+")
+# naVar <- naRm
+if(UHisH) uVar <- "UHisH" 
+# if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
+if(exists("nfate")) fVar <- paste0(nfate,"fates") # exists seems to be more complicated than I thought...
 # suffix = "_scl_cc_q1"
 ### why unname?
+paste(quest, fVar, sep="_")
+suffix = paste(quest,paste(fVar,paste0("ff",ff_num), sep="_"), sep="_")
+
 aicTab <- unname(mods) %>% aic_mod()
-fname <- aicTab %>% save_tab(suffix=suffix, dir = homeDir, rtf=TRUE)
+fname <- aicTab %>% save_tab(suffix=suffix, outdir = homeDir, rtf=TRUE)
 cat("creating AIC table; filename =",fname)
 
-knitr::include_graphics(paste0("analysis/",fname), 
+# knitr::include_graphics(paste0(homeDir,"tables/",fname), 
+knitr::include_graphics(fname, 
                         dpi=(1300/6)) # dpi setting = only thing that works
 # MuMIn::model.sel(mods)
 # modified_mods <- lapply(mods, MASS::glm.convert)
@@ -44,18 +56,22 @@ set_gtsummary_theme(my_theme)
 # first, find the number of the best model
 # modnum = 13# manually enter number for top model
 # get all the model names:
+if(FALSE){
+  m<-5
+}
 numMods <- 2
 modNames <- as.list(modnames(mods)) # list of models in the order they were specified
 for(m in 1:numMods){
   mod  <- aicTab$`_data`$`__GT_ROWNAME_PRIVATE__`[m]
-  modnum <- which(modNames == mod)
-  cat("mod number:", modnum, "is:", mod, "with delta AIC:", aicTab$`_data`$dAICc[m])
-  regrTab <- tabRegr(modNum=modnum,
+  mnum <- which(modNames == mod)
+  cat("mod number:", mnum, "is:", mod, "with delta AIC:", aicTab$`_data`$dAICc[m])
+  regrTab <- tabRegr(modNum=mnum,
                      mods=mods,
                      resp=resp,
                      debug=FALSE,
-                     suffix=paste0(datName,quest,uVar,fVar,modnum))
-  knitr::include_graphics(paste0("analysis/",regrTab),
+                     # suffix=paste(datName,quest,ff_val,fVar,paste0("mod",mnum), sep="_"))
+                     suffix=paste(datName,quest,paste0("ff",ff_num),fVar,paste0("mod",mnum), sep="_"))
+  knitr::include_graphics(paste0(homeDir,"tables/",regrTab),
                           dpi=(1300/6)) # dpi setting = only thing that works
   # topMod = aicTab$`_data`$`__GT_ROWNAME_PRIVATE__`[1]
   # cat("top model:", topMod)

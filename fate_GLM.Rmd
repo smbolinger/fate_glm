@@ -12,7 +12,8 @@ editor_options:
 params:
   miss_diag: FALSE
   sep_diag: FALSE
-  plots: FALSE
+  plots1: FALSE
+  plots2: FALSE
   debug: FALSE
   sett: "default"
   resp1: "is_u"
@@ -21,7 +22,7 @@ params:
   n_run: 500 
   imp_met: "pmm"
   home_dir: "/home/wodehouse/projects/fate_glm/"
-  data_file: "clean_data.csv"
+  data_file: "dataframes/ndGLM1_field_fate9_final_obs_int3_final_obs_date2.rds"
 ---
 
 ## Introduction
@@ -114,7 +115,8 @@ all_vars <- c(predictors, pred2 ,params$resp1, params$resp2)
 ### a. Load processed data 
 
 ```{r}
-ndGLM1 <- readRDS("dataframes/ndGLM1.rds")
+# ndGLM1 <- readRDS("dataframes/ndGLM1.rds")
+ndGLM1 <- readRDS(params$data_file)
 ```
 
 
@@ -237,6 +239,8 @@ saveRDS(ndGLM_scl_cc, "dataframes/ndGLM_scl_cc.rds")
 ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"),
                                           HF_mis = ifelse(HF_mis==1, "yes", "no"))
 # ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"))
+ff_num <- str_extract(ff_val, "\\d+")
+# write.csv(ndGLM_scl_cc_1, sprintf("dat_complete_ff%s.csv",ff_num), row.names=FALSE)
 write.csv(ndGLM_scl_cc_1, "dat_complete.csv", row.names=FALSE)
 
 ```
@@ -251,6 +255,7 @@ ndGLM_cc <- ndGLM_  %>%
 # colSums(is.na(ndGLM_cc))
 print_vars(ndGLM_cc)
 datName      <- "ndGLM_cc"
+saveRDS(ndGLM_cc, "dataframes/ndGLM_cc.rds")
 # }
 str(ndGLM_cc)
 if(centered){ # remove the unscaled/uncentered dfs, but already saved in case needed
@@ -301,7 +306,7 @@ AKA is there field evidence or not
 
 ```{r q1, warning=FALSE}
 question <- "Was nest fate classifiable in the field?"
-quest   <- "_q1"
+quest   <- "q1"
 # dat <- parse(datName) # this one appears to be for files
 dat <- get(datName)
 mods <- list()
@@ -363,7 +368,7 @@ IF using the reduced data for question 2, print plots/tables again
 
 ```{r q2, echo=TRUE}
 question <- "Was nest fate classified correctly in the field?"
-quest    <- "_q2"
+quest    <- "q2"
 # datName <- "ndGLM_scl_redcc"
 dat <- get(datName)
 mods <- list()
