@@ -100,8 +100,9 @@ met_list <- c("default","pmm", "rf", "cart", "caliber","cc")# don't need full he
 # col_sel <- c(prVars,resp) # columns to select, as strings
 # cat("\n\n>> models to fit:\n", paste(mods4sim, collapse="\n"))
 cat("\n\n>> number of imputations:", params$m, class(params$m))
-cat("\n\n>> methods to test:", met_list)
+cat("\t>> & methods to test:", met_list)
 cat("\n\n>> bias to be calculated:", bias_names, "\n")
+cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 
 #########################################################################################
 #########################################################################################
@@ -170,9 +171,11 @@ for(r in resp_list){
   imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mod4sim,mets = met_list, biasVals = bias_names, debug = debug)
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
-  cat("\n\n********************************************************************************************\n")
-  cat(">>>>> BIAS VALUES: \n")
-  cat("********************************************************************************************\n")
+  if(param$deb){
+    cat("\n\n********************************************************************************************\n")
+    cat(">>>>> BIAS VALUES: \n")
+    cat("********************************************************************************************\n")
+  }
   # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = params$deb)
   # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, modnum = z, mets = met_list, biasVals = bias_names, debug = params$deb)
   bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,hdir = params$hdir,resp = r, vars = var_list, mods=mods4sim, mets = met_list, biasVals = bias_names, debug = params$deb)
