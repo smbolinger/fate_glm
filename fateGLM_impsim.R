@@ -10,6 +10,7 @@ library(tidyverse)
 source("mice_functions.R")
 source("imp_sim_functions.R")
 source("missing_data.R")
+source("other_imp.R")
 
 # spec <- matrix(c(
 #   'lin',  'l', 1, "logical",
@@ -99,7 +100,7 @@ bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
 # won't so this because I also don't know  the specific relationship of the interaction
 # , met_list <- c("default","pmm", "rf", "cart", "caliber","default.int","pmm.int","passive.int","cc")
 # met_list <- c("default","pmm", "rf", "cart", "caliber","cc","full") # don't need full here?
-met_list <- c("default","pmm", "rf", "cart", "caliber","cc")# don't need full here?
+met_list <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
 
 # col_sel <- c(prVars,resp) # columns to select, as strings
 # cat("\n\n>> models to fit:\n", paste(mods4sim, collapse="\n"))
