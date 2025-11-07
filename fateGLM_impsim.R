@@ -65,8 +65,12 @@ names(mods4sim) <- c("m1", "m8", "m16")
 
 # dat4sim <- read.csv("dat_complete_ff8.csv", stringsAsFactors = TRUE)
 dat4sim <- read.csv("dat_complete.csv", stringsAsFactors = TRUE)
+dat4simnum <- read.csv("dat_num.csv"  )
 # make 'H' the reference category:
 dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H")
+# dat4simnum$cfate <- relevel(dat4simnum$cfate, ref=1)
+levels(dat4sim$HF_mis) <- c(0,1)
+levels(dat4sim$is_u)   <- c(0,1)
  
 # made the responses into "yes/no" so I could import them automatically as factors
 prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
@@ -107,6 +111,7 @@ cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 #########################################################################################
 #########################################################################################
 
+# sim_dat <- mkSimDat(nd = dat4sim, facToNum = TRUE, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
 sim_dat <- mkSimDat(nd = dat4sim, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
 # sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = debug, convFact = TRUE)
 missing_tab("sim_dat",prVars,)
