@@ -236,6 +236,14 @@ saveRDS(ndGLM_scl, "dataframes/ndGLM_scl.rds")
 ndGLM_scl_cc <- ndGLM_scl %>% remove_na(allNA = ndGLM_miss)
 saveRDS(ndGLM_scl_cc, "dataframes/ndGLM_scl_cc.rds")
 
+ndGLM_ %>% 
+  select(nest, is_u, HF_mis, misclass, species, cfate, cam_fate, nest_age, fdate, obs_int) %>%
+  mutate(spcs = ifelse(species=="LETE", 0, 1)) %>%
+  mutate(across(all_of(predictors), function(x) as.numeric(scale(x,scale=F)))) %>%
+  write.csv("dat_num.csv", row.names=FALSE)
+
+# I think I did this so they would become factors automatically, but now I have to make 
+# them back into 0-1 and still keep them as factors, which may take the same amt of code?
 ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"),
                                           HF_mis = ifelse(HF_mis==1, "yes", "no"))
 # ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"))
