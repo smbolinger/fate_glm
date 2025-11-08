@@ -45,7 +45,7 @@ if(length(arg)==0){
 }
 if(params$lin==FALSE){
   params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  params$nrun <-3
+  params$nrun <-2
   # suffix <- "5reps"
   # params$deb <- TRUE
 }
@@ -56,6 +56,7 @@ if(params$lin==FALSE){
 # # mod4sim <- modList[1]
 # hdir <- params$home_dir
 
+debugging <- FALSE # for uickly setting values when working in the file with the functions
 suffix <- sprintf("%sruns", params$nrun)
 cat(">> home directory:", params$hdir, "\t> & number of runs:", params$nrun, "\t> & output suffix:", suffix)
 modList <- readLines("modList.txt")
@@ -66,9 +67,11 @@ names(mods4sim) <- c("m1", "m8", "m16")
 
 # dat4sim <- read.csv("dat_complete_ff8.csv", stringsAsFactors = TRUE)
 dat4sim <- read.csv("dat_complete.csv", stringsAsFactors = TRUE)
+# table(dat4sim$is_u) # new levels were applied correctly
 dat4simnum <- read.csv("dat_num.csv"  )
 # make 'H' the reference category:
 dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H")
+dat4sim$species <- relevel(dat4sim$species, ref="LETE")
 # dat4simnum$cfate <- relevel(dat4simnum$cfate, ref=1)
 levels(dat4sim$HF_mis) <- c(0,1)
 levels(dat4sim$is_u)   <- c(0,1)
@@ -91,9 +94,12 @@ if(FALSE){
   # debug <- FALSE
   # resp is passed from fate_GLM1
 }
+if(exists("deb_new")) params$deb <- deb_new 
+if(exists("nrun_new")) params$nrun <- nrun_new 
 
 # var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age") # just the vars w/ missing data or interactions
-var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int", "obs_int", "fdate") # all vars
+# var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int", "obs_int", "fdate") # all vars
+var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
 bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
 # bias_names <- c("bias","pctBias", "covRate", "avgWidth", "RMSE", "SD")
 # can't actually use the interaction term in the imputation model bc need identical data for AIC comparison
@@ -113,7 +119,7 @@ cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 #########################################################################################
 
 # sim_dat <- mkSimDat(nd = dat4sim, facToNum = TRUE, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
-sim_dat <- mkSimDat(nd = dat4sim, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
+sim_dat <- mkSimDat(nd = dat4sim, vars=var_list, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
 # sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = debug, convFact = TRUE)
 missing_tab("sim_dat",prVars,)
 
@@ -121,19 +127,21 @@ missing_tab("sim_dat",prVars,)
 if(FALSE){
   z <- 1
   r <- "is_u"
-  # r <- "HF_mis"
+  r <- "HF_mis"
   params$deb <- TRUE
   met_list <- c("default", "rf","cc") # can use fewer methods to make it faster
   mods4sim
   for(m in seq_along(mnames)){
     # modnum = str_extract(mnames[m],"\\d+")
     mod    = mods4sim[m]
+    mod <- mods4sim[3]
     fitReal <- glm(as.formula(paste0(r, mod)),
                    # data=ndGLM_scl_cc,
                    data=dat4sim,
                    family=binomial,
                    method=brglm2::brglm_fit)
     # ,
+    coef(fitReal)
                    # control=brglmControl(maxit=iter) )
     headr <- paste("Regression Summary for Model:",
                    paste(r, mod, sep=" "), 
@@ -163,10 +171,13 @@ if(FALSE){
 #     cat("\n********************************************************************************************\n")
 #   }
 for(r in resp_list){
-  col_sel <- c(prVars,r) # columns to select, as strings
+  # col_sel <- c(prVars,r) # columns to select, as strings
+  col_list<- c(prVars,r) # columns to select, as strings
+  # col_sel
   # if(params$deb){
   cat("\n\n********************************************************************************************")
-  cat("\n>> response:", r,"\n\t& columns for imputation:", col_sel)
+  # cat("\n>> response:", r,"\n\t& columns for imputation:", col_sel)
+  cat("\n>> response:", r,"\n\t& columns for imputation:", col_list)
   cat("\n********************************************************************************************\n\n")
   # }
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = resp, vars = var_list, mod = mod4sim, nruns=nrun, debug = FALSE) # don't want to set seed
@@ -174,7 +185,8 @@ for(r in resp_list){
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mod4sim, nruns=nrun, debug = debug) # don't want to set seed
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mods4sim[z], nruns=params$nrun, debug = params$deb) # don't want to set seed
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=15, nruns=params$nrun, debug = params$deb) # don't want to set seed
-  imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
+  imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
+  # imp_sim <- runSim(datNA =aDat,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mod4sim,mets = met_list, biasVals = bias_names, debug = debug)
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
   if(params$deb){
