@@ -21,7 +21,12 @@ source("other_imp.R")
 # ), byrow=TRUE, ncol=4)
 # opt = getopt::getopt(spec = spec)
 
-params <- list(nrun=100, hdir="/home/wodehouse/projects/fate_glm/", deb=FALSE, lin=FALSE, m=20)
+params <- list(nrun=100, hdir="/home/wodehouse/projects/fate_glm/",
+               deb=FALSE,
+               xdeb=FALSE, # for obsessively checking things - not useful for normal debugging & lots of text output
+               ipl=FALSE,
+               lin=FALSE,
+               m=20)
 # params <- list(nrun=100, deb=FALSE, lin=FALSE)
 arg <- commandArgs(trailingOnly=TRUE)
 if(length(arg)==0){
@@ -39,13 +44,16 @@ if(length(arg)==0){
     if(grepl("^\\d+$", a)) params$nrun  <- a
     else if(a=="lin") params$lin        <- TRUE
     else if(a=="deb") params$deb        <- TRUE
+    else if(a=="xdeb") params$xdeb        <- TRUE
+    else if(a=="ipl") params$ipl       <- TRUE
     else if(grepl("m\\d+", a)) params$m <- as.numeric(str_extract(a, "\\d+"))
     # else if()
   }
 }
 if(params$lin==FALSE){
   params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  params$nrun <-2
+  # params$m <- 5
+  # params$nrun <-2
   # suffix <- "5reps"
   # params$deb <- TRUE
 }
@@ -96,10 +104,12 @@ if(FALSE){
 }
 if(exists("deb_new")) params$deb <- deb_new 
 if(exists("nrun_new")) params$nrun <- nrun_new 
+if(exists("mnew")) params$m <- mnew
 
 # var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age") # just the vars w/ missing data or interactions
 # var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int", "obs_int", "fdate") # all vars
 var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
+# var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "species","speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
 bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
 # bias_names <- c("bias","pctBias", "covRate", "avgWidth", "RMSE", "SD")
 # can't actually use the interaction term in the imputation model bc need identical data for AIC comparison
@@ -185,7 +195,10 @@ for(r in resp_list){
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mod4sim, nruns=nrun, debug = debug) # don't want to set seed
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mods4sim[z], nruns=params$nrun, debug = params$deb) # don't want to set seed
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=15, nruns=params$nrun, debug = params$deb) # don't want to set seed
-  imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
+  
+  ### maybe I should just pass it the entire params list???
+  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb, xdebug=params$xdeb) # don't want to set seed
+  imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
   # imp_sim <- runSim(datNA =aDat,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mod4sim,mets = met_list, biasVals = bias_names, debug = debug)
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
@@ -196,7 +209,7 @@ for(r in resp_list){
   }
   # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = params$deb)
   # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, modnum = z, mets = met_list, biasVals = bias_names, debug = params$deb)
-  bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,hdir = params$hdir,resp = r, vars = var_list, mods=mods4sim, mets = met_list, biasVals = bias_names, debug = params$deb)
+  bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,hdir = params$hdir,resp = r, vars = var_list, mods=mods4sim, mets = met_list, biasVals = bias_names, debug = params$deb, xdebug=params$xdeb)
   # biasfile <- paste0(params$home_dir, sprintf("out/bias_vals_%s_%s.rds", r, names(mods4sim)[z]))
   # biasfile <- paste0(params$hdir, sprintf("out/bias_vals_%s_%s_%s_.rds", r, names(mods4sim)[z], params$suffix))
   # biasfile <- paste0(params$hdir, sprintf("out/bias_vals_%s_%s_%s_.rds", r, names(mods4sim)[z], suffix))
