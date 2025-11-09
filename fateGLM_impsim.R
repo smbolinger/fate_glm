@@ -76,7 +76,7 @@ names(mods4sim) <- c("m1", "m8", "m16")
 # dat4sim <- read.csv("dat_complete_ff8.csv", stringsAsFactors = TRUE)
 dat4sim <- read.csv("dat_complete.csv", stringsAsFactors = TRUE)
 # table(dat4sim$is_u) # new levels were applied correctly
-dat4simnum <- read.csv("dat_num.csv"  )
+# dat4simnum <- read.csv("dat_num.csv"  )
 # make 'H' the reference category:
 dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H")
 dat4sim$species <- relevel(dat4sim$species, ref="LETE")
