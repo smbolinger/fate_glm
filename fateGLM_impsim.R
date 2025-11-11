@@ -128,10 +128,11 @@ cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 #########################################################################################
 #########################################################################################
 
-# sim_dat <- mkSimDat(nd = dat4sim, facToNum = TRUE, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
-sim_dat <- mkSimDat(nd = dat4sim, vars=var_list, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
-# sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = debug, convFact = TRUE)
-missing_tab("sim_dat",prVars,)
+#### moved data creation inside the loop so each run has new data
+# # sim_dat <- mkSimDat(nd = dat4sim, facToNum = TRUE, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
+# sim_dat <- mkSimDat(nd = dat4sim, vars=var_list, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
+# # sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = debug, convFact = TRUE)
+# missing_tab("sim_dat",prVars,)
 
 # names(mods4sim) <- c("m1", "m8")
 if(FALSE){
@@ -198,7 +199,8 @@ for(r in resp_list){
   
   ### maybe I should just pass it the entire params list???
   # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb, xdebug=params$xdeb) # don't want to set seed
-  imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
   # imp_sim <- runSim(datNA =aDat,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mod4sim,mets = met_list, biasVals = bias_names, debug = debug)
   # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
