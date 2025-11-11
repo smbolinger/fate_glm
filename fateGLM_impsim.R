@@ -138,6 +138,8 @@ cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 if(FALSE){
   z <- 1
   r <- "is_u"
+  y <- 3
+  
   r <- "HF_mis"
   params$deb <- TRUE
   met_list <- c("default", "rf","cc") # can use fewer methods to make it faster
@@ -163,27 +165,50 @@ if(FALSE){
       gtsummary::as_gt() %>%
       gt::tab_header(title=headr)
     print(tabReg)
+  metLists
   }
 }
-# mods4sim
-# for(z in seq_along(mods4sim)){
-#   # , cat("\n>>model:", names(model), model)
-#   if(params$deb){
-#     cat("\n\n********************************************************************************************\n")
-#     cat("\n********************************************************************************************\n")
-#     cat("\n/////////////////////////////////////////////////////////////////////////////////////////////\n")
-#   }
-#   cat("\n********************************************************************************************")
-#   cat("\n>> model:", names(mods4sim)[z], " | ", mods4sim[z])
-#   cat("\n********************************************************************************************\n")
-#   if(params$deb){
-#     cat("\n/////////////////////////////////////////////////////////////////////////////////////////////\n")
-#     cat("\n********************************************************************************************\n")
-#     cat("\n********************************************************************************************\n")
-#   }
+col_list <- c(prVars, "resp", "inter")
+metLists <- array(dim=c(length(resp_list), length(col_list), length(met_list),length(mods4sim)))
+dimnames(metLists) <- list(resp_list, col_list,met_list, mods4sim)
+# sDat <- mkSimDat(seeed = 613, nd=dat4sim, vars=var_list, method="amp", wt=TRUE, debug=params$deb, convFact=TRUE)
 for(r in resp_list){
   # col_sel <- c(prVars,r) # columns to select, as strings
-  col_list<- c(prVars,r) # columns to select, as strings
+  col_list<- c(prVars,r )# columns to select, as strings
+  # metLists <- array(dim=c(length(met_list), 6, length(resp_list), length(mods)))
+#   sDat <- mkSimDat(seeed = 613, nd=dat4sim, vars=var_list, method="amp", wt=TRUE, debug=params$deb, convFact=TRUE)
+#   sDat <- sDat$amp
+#   # sDat <- sDat$amp %>% select(all_of(col_list))
+#   for (y in seq_along(mods4sim)){
+#     sDat <- sDat %>% select(all_of(col_list))
+#     inters <- sapply(mods4sim[y],  function(x)  str_extract_all(x, "\\w+(?=\\s\\*)|(?<=\\*\\s)\\w+"))[[1]]
+#     inter <- paste(inters, collapse=".")
+#     if(length(inters)==0) inter <- "inter"
+#     sDat[[inter]] <- NA
+#     # col_list<- c(prVars,r, paste(inters, collapse=".")) # columns to select, as strings
+#     # sDat <- sDat$amp %>% select(all_of(col_list))
+#     # if(grepl("*", mods4sim[y], fixed=TRUE)){ # the defaults are for this model
+#     #   inters <- sapply(mods4sim[y],  function(x)  str_extract_all(x, "\\w+(?=\\s\\*)|(?<=\\*\\s)\\w+"))
+#     #   inters <- inters[[1]]
+#     #   inter <- paste(inters, collapse=".")
+#     #   inter2 <- paste(inters, collapse=":")
+#     #   inter3 <- paste(inters,collapse="*")
+#     #   }
+#     metLists[r,,,y] <- sapply(met_list, function(x) mkMetList(x, dat = sDat,int = inter3,debug = params$deb))
+#     # metList[,,]
+#      # mmm<- sapply(met_list, function(x) mkMetList(x, dat = sDat,int = inter3,debug = params$deb))
+#      # dim(mmm)
+#     if(FALSE){
+#       y <- y+1
+#     }
+#   }
+# }
+#   saveRDS(metLists, "met_lists.rds")
+  metLists <- readRDS("met_lists.rds")
+  metLists
+  saveRDS(frmla, "forms.rds")
+  # metLists
+# sim_dat <- mkSimDat(nd = dat4sim, vars=var_list, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
   # col_sel
   # if(params$deb){
   cat("\n\n********************************************************************************************")
@@ -191,19 +216,7 @@ for(r in resp_list){
   cat("\n>> response:", r,"\n\t& columns for imputation:", col_list)
   cat("\n********************************************************************************************\n\n")
   # }
-  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = resp, vars = var_list, mod = mod4sim, nruns=nrun, debug = FALSE) # don't want to set seed
-  # imp_sim <- runSim(dat=ndGLM_scl_cc, datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mod4sim, nruns=nrun, debug = debug) # don't want to set seed
-  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mod4sim, nruns=nrun, debug = debug) # don't want to set seed
-  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mods4sim[z], nruns=params$nrun, debug = params$deb) # don't want to set seed
-  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=15, nruns=params$nrun, debug = params$deb) # don't want to set seed
-  
-  ### maybe I should just pass it the entire params list???
-  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb, xdebug=params$xdeb) # don't want to set seed
-  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
   imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
-  # imp_sim <- runSim(datNA =aDat,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim, m=params$m, nruns=params$nrun, debug = params$deb) # don't want to set seed
-  # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mod4sim,mets = met_list, biasVals = bias_names, debug = debug)
-  # bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = debug)
   if(params$deb){
     cat("\n\n********************************************************************************************\n")
     cat(">>>>> BIAS VALUES: \n")
