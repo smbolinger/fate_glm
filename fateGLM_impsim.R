@@ -12,15 +12,6 @@ source("imp_sim_functions.R")
 source("missing_data.R")
 source("other_imp.R")
 
-# spec <- matrix(c(
-#   'lin',  'l', 1, "logical",
-#   'help', 'h', 0, "logical",
-#   'nrun', 'n', 2, "numeric",
-#   'hdir', 'r', 2, "character",
-#   'deb',  'd', 2, "logical"
-# ), byrow=TRUE, ncol=4)
-# opt = getopt::getopt(spec = spec)
-
 params <- list(nrun=100, hdir="/home/wodehouse/projects/fate_glm/",
                deb=FALSE,
                xdeb=FALSE, # for obsessively checking things - not useful for normal debugging & lots of text output
@@ -32,10 +23,8 @@ arg <- commandArgs(trailingOnly=TRUE)
 if(length(arg)==0){
   # stop("at minimum, needs argument for 'lin' (T or F)")
   cat("\n\n/////////////////////////////////////////////////////////////////////////////////////////////\n")
-  # cat("\n** NOTE ** using default of linux = FALSE, nrun = 3, & debug = FALSE\n\n")
   cat("\n** NOTE ** no arguments provided - using default of linux = FALSE\n\n")
   cat("/////////////////////////////////////////////////////////////////////////////////////////////\n\n\n")
-  # print("\n** NOTE ** using default of linux = FALSE, nrun = 5, & debug = FALSE\n\n")
 } else if(length(arg) > 0){
   cat("arg =")
   print(arg)
@@ -58,24 +47,15 @@ if(params$lin==FALSE){
   # params$deb <- TRUE
 }
 
-
-# nrun <- params$nrun
-# debug <- params$debug
-# # mod4sim <- modList[1]
-# hdir <- params$home_dir
-
 debugging <- FALSE # for uickly setting values when working in the file with the functions
 suffix <- sprintf("%sruns", params$nrun)
 cat(">> home directory:", params$hdir, "\t> & number of runs:", params$nrun, "\t> & output suffix:", suffix)
 modList <- readLines("modList.txt")
 mods4sim <- modList[c(1,8,16) ]
 # mods4sim
-# mods4sim <- modList[c(1,8) ]
 names(mods4sim) <- c("m1", "m8", "m16")
 
-# dat4sim <- read.csv("dat_complete_ff8.csv", stringsAsFactors = TRUE)
 dat4sim <- read.csv("dat_complete.csv", stringsAsFactors = TRUE)
-# table(dat4sim$is_u) # new levels were applied correctly
 # dat4simnum <- read.csv("dat_num.csv"  )
 # make 'H' the reference category:
 dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H")
@@ -106,20 +86,10 @@ if(exists("deb_new")) params$deb <- deb_new
 if(exists("nrun_new")) params$nrun <- nrun_new 
 if(exists("mnew")) params$m <- mnew
 
-# var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age") # just the vars w/ missing data or interactions
-# var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int", "obs_int", "fdate") # all vars
 var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
-# var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "species","speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
 bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
-# bias_names <- c("bias","pctBias", "covRate", "avgWidth", "RMSE", "SD")
-# can't actually use the interaction term in the imputation model bc need identical data for AIC comparison
-# won't so this because I also don't know  the specific relationship of the interaction
-# , met_list <- c("default","pmm", "rf", "cart", "caliber","default.int","pmm.int","passive.int","cc")
-# met_list <- c("default","pmm", "rf", "cart", "caliber","cc","full") # don't need full here?
 met_list <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
 
-# col_sel <- c(prVars,resp) # columns to select, as strings
-# cat("\n\n>> models to fit:\n", paste(mods4sim, collapse="\n"))
 cat("\n\n>> number of imputations:", params$m, class(params$m))
 cat("\t>> & methods to test:", met_list)
 cat("\n\n>> bias to be calculated:", bias_names, "\n")
@@ -129,12 +99,6 @@ cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 #########################################################################################
 
 #### moved data creation inside the loop so each run has new data
-# # sim_dat <- mkSimDat(nd = dat4sim, facToNum = TRUE, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
-# sim_dat <- mkSimDat(nd = dat4sim, vars=var_list, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
-# # sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = debug, convFact = TRUE)
-# missing_tab("sim_dat",prVars,)
-
-# names(mods4sim) <- c("m1", "m8")
 if(FALSE){
   z <- 1
   r <- "is_u"
@@ -168,51 +132,12 @@ if(FALSE){
   metLists
   }
 }
-col_list <- c(prVars, "resp", "inter")
-metLists <- array(dim=c(length(resp_list), length(col_list), length(met_list),length(mods4sim)))
-dimnames(metLists) <- list(resp_list, col_list,met_list, mods4sim)
-# sDat <- mkSimDat(seeed = 613, nd=dat4sim, vars=var_list, method="amp", wt=TRUE, debug=params$deb, convFact=TRUE)
 for(r in resp_list){
   # col_sel <- c(prVars,r) # columns to select, as strings
   col_list<- c(prVars,r )# columns to select, as strings
-  # metLists <- array(dim=c(length(met_list), 6, length(resp_list), length(mods)))
-#   sDat <- mkSimDat(seeed = 613, nd=dat4sim, vars=var_list, method="amp", wt=TRUE, debug=params$deb, convFact=TRUE)
-#   sDat <- sDat$amp
-#   # sDat <- sDat$amp %>% select(all_of(col_list))
-#   for (y in seq_along(mods4sim)){
-#     sDat <- sDat %>% select(all_of(col_list))
-#     inters <- sapply(mods4sim[y],  function(x)  str_extract_all(x, "\\w+(?=\\s\\*)|(?<=\\*\\s)\\w+"))[[1]]
-#     inter <- paste(inters, collapse=".")
-#     if(length(inters)==0) inter <- "inter"
-#     sDat[[inter]] <- NA
-#     # col_list<- c(prVars,r, paste(inters, collapse=".")) # columns to select, as strings
-#     # sDat <- sDat$amp %>% select(all_of(col_list))
-#     # if(grepl("*", mods4sim[y], fixed=TRUE)){ # the defaults are for this model
-#     #   inters <- sapply(mods4sim[y],  function(x)  str_extract_all(x, "\\w+(?=\\s\\*)|(?<=\\*\\s)\\w+"))
-#     #   inters <- inters[[1]]
-#     #   inter <- paste(inters, collapse=".")
-#     #   inter2 <- paste(inters, collapse=":")
-#     #   inter3 <- paste(inters,collapse="*")
-#     #   }
-#     metLists[r,,,y] <- sapply(met_list, function(x) mkMetList(x, dat = sDat,int = inter3,debug = params$deb))
-#     # metList[,,]
-#      # mmm<- sapply(met_list, function(x) mkMetList(x, dat = sDat,int = inter3,debug = params$deb))
-#      # dim(mmm)
-#     if(FALSE){
-#       y <- y+1
-#     }
-#   }
-# }
-#   saveRDS(metLists, "met_lists.rds")
   metLists <- readRDS("met_lists.rds")
   metLists
-  saveRDS(frmla, "forms.rds")
-  # metLists
-# sim_dat <- mkSimDat(nd = dat4sim, vars=var_list, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
-  # col_sel
-  # if(params$deb){
   cat("\n\n********************************************************************************************")
-  # cat("\n>> response:", r,"\n\t& columns for imputation:", col_sel)
   cat("\n>> response:", r,"\n\t& columns for imputation:", col_list)
   cat("\n********************************************************************************************\n\n")
   # }
@@ -225,20 +150,5 @@ for(r in resp_list){
   # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, mod = mods4sim[z], mets = met_list, biasVals = bias_names, debug = params$deb)
   # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,resp = r, vars = var_list, modnum = z, mets = met_list, biasVals = bias_names, debug = params$deb)
   bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,hdir = params$hdir,resp = r, vars = var_list, mods=mods4sim, mets = met_list, biasVals = bias_names, debug = params$deb, xdebug=params$xdeb)
-  # biasfile <- paste0(params$home_dir, sprintf("out/bias_vals_%s_%s.rds", r, names(mods4sim)[z]))
-  # biasfile <- paste0(params$hdir, sprintf("out/bias_vals_%s_%s_%s_.rds", r, names(mods4sim)[z], params$suffix))
-  # biasfile <- paste0(params$hdir, sprintf("out/bias_vals_%s_%s_%s_.rds", r, names(mods4sim)[z], suffix))
-  # # saveRDS(bias_out, sprintf("out/bias_vals_%s_%s.rds",r, names(mods4sim)[z]))
-  # saveRDS(bias_out, biasfile)
-  # biasfile1 <- paste0(params$hdir, sprintf("out/bias_vals_%s_%s_%s_.csv", r, names(mods4sim)[z], suffix))
-  # # biasfile1
-  # # write.csv(bias_out, file = sprintf("out/bias_vals_%s_%s.csv", r, names(mods4sim)[z]))# write to csv in case script aborts 
-  # # write.csv(bias_out, file = biasfile1, row.names = FALSE)# write to csv in case script aborts 
-  # ## NOTE - NEED ROW NAMES - that's where the param names are stored |> 
-  # write.csv(bias_out, file = biasfile1)# write to csv in case script aborts
-  # if(params$deb){
-  # }
-  # print(bias_out) # print the output to console
-  # cat("\n******************************************************************************************\n")
 }
 # }
