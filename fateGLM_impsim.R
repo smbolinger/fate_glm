@@ -12,6 +12,8 @@ source("imp_sim_functions.R")
 source("missing_data.R")
 source("other_imp.R")
 
+#########################################################################################
+
 params <- list(nrun=100, hdir="/home/wodehouse/projects/fate_glm/",
                deb=FALSE,
                xdeb=FALSE, # for obsessively checking things - not useful for normal debugging & lots of text output
@@ -42,14 +44,17 @@ if(length(arg)==0){
 if(params$lin==FALSE){
   params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
   # params$m <- 5
-  # params$nrun <-2
-  # suffix <- "5reps"
+  params$nrun <-2
   # params$deb <- TRUE
+  # params$xdeb <- TRUE
 }
+
+#########################################################################################
 
 debugging <- FALSE # for uickly setting values when working in the file with the functions
 suffix <- sprintf("%sruns", params$nrun)
 cat(">> home directory:", params$hdir, "\t> & number of runs:", params$nrun, "\t> & output suffix:", suffix)
+
 modList <- readLines("modList.txt")
 mods4sim <- modList[c(1,8,16) ]
 # mods4sim
@@ -64,9 +69,15 @@ dat4sim$species <- relevel(dat4sim$species, ref="LETE")
 levels(dat4sim$HF_mis) <- c(0,1)
 levels(dat4sim$is_u)   <- c(0,1)
  
+#########################################################################################
+
 # made the responses into "yes/no" so I could import them automatically as factors
 prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
 resp_list <- c("is_u", "HF_mis")
+
+var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
+bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
+met_list <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
 
 ## FOR TESTING:
 if(FALSE){
@@ -79,16 +90,14 @@ if(FALSE){
   met_list <- c("default","rf", "caliber", "cc")
   params$nrun <- 2
   params$deb <- TRUE
-  # debug <- FALSE
-  # resp is passed from fate_GLM1
 }
+
 if(exists("deb_new")) params$deb <- deb_new 
 if(exists("nrun_new")) params$nrun <- nrun_new 
 if(exists("mnew")) params$m <- mnew
-
-var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
-bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
-met_list <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
+formulas <- readRDS("form_lists.rds")
+metLists <- readRDS("met_lists.rds")
+names(metLists)[3]
 
 cat("\n\n>> number of imputations:", params$m, class(params$m))
 cat("\t>> & methods to test:", met_list)
@@ -132,16 +141,19 @@ if(FALSE){
   metLists
   }
 }
+
 for(r in resp_list){
   # col_sel <- c(prVars,r) # columns to select, as strings
   col_list<- c(prVars,r )# columns to select, as strings
-  metLists <- readRDS("met_lists.rds")
-  metLists
+  form_list <- formulas[[r]]
+  # metLists
   cat("\n\n********************************************************************************************")
   cat("\n>> response:", r,"\n\t& columns for imputation:", col_list)
   cat("\n********************************************************************************************\n\n")
   # }
-  imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  # imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mets = met_list,forms=form_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mLists = metLists,forms=form_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  
   if(params$deb){
     cat("\n\n********************************************************************************************\n")
     cat(">>>>> BIAS VALUES: \n")
