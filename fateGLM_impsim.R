@@ -43,10 +43,10 @@ if(length(arg)==0){
 }
 if(params$lin==FALSE){
   params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  # params$m <- 5
-  params$nrun <-2
-  # params$deb <- TRUE
-  # params$xdeb <- TRUE
+  params$m <- 5
+  params$nrun <-5
+  params$deb <- TRUE
+  params$xdeb <- TRUE
 }
 
 #########################################################################################
