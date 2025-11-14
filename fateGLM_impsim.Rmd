@@ -7,12 +7,17 @@ output:
     code_folding: hide
   pdf_document: default
 params:
-  nrun: 100
-  debug: FALSE
-  home_dir: "/home/wodehouse/projects/fate_glm/"
-  linux: FALSE
-  suffix: "100reps"
+  nrun: 19 
+  deb: TRUE
+  xdeb: TRUE
+  ipl: TRUE
+  hdir: "C:/Users/sarah/Dropbox/Models/fate_glm/"
+  lin: FALSE
+  m: 5
+  test: TRUE
 ---
+
+DESIGNED FOR SMALL NUMBERS OF SIMULATIONS ON WINDOWS!
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -23,9 +28,10 @@ library(gt)
 library(gtsummary)
 library(tidyverse)
 source("mice_functions.R")
-source("imp_sim_functions.R")
+# source("imp_sim_functions.R")
+source("imp_sim_functions-DEBUG.R")
 source("missing_data.R")
-
+source("other_imp.R")
 ```
 
 
@@ -35,91 +41,96 @@ source("missing_data.R")
 
 ```{r, warning=FALSE}
 # source("GLM_ampute.R")
+suffix <- sprintf("%sruns", params$nrun)
+cat(">> home directory:", params$hdir, "\t> & number of runs:", params$nrun, "\t> & output suffix:", suffix)
 
-# suppress_warnings()
-# suppressWarnings()
-# if(!childd){
-#   # I don't remember what I was gonna put in here...
-# }
-# modList <- readRDS("dataframes/modList.rds")
 modList <- readLines("modList.txt")
-
-# ndGLM_scl_cc <- readRDS("dataframes/ndGLM_scl_cc.rds")
-# ndGLM_scl_cc <- read.csv("ndGLM_scl_cc.csv")
+mods4sim <- modList[c(1,8,16) ]
+names(mods4sim) <- c("m1", "m8", "m16")
 
 dat4sim <- read.csv("dat_complete.csv", stringsAsFactors = TRUE)
+dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H")
+dat4sim$species <- relevel(dat4sim$species, ref="LETE")
+levels(dat4sim$HF_mis) <- c(0,1)
+levels(dat4sim$is_u)   <- c(0,1)
+```
+
+
+```{r, warning=FALSE}
 # made the responses into "yes/no" so I could import them automatically as factors
 prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
 resp_list <- c("is_u", "HF_mis")
 
-## FOR TESTING:
-if(FALSE){
-  # mod4imp <- modList[1]
-  var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int")
-  bias_names <- c("bias", "pctBias", "covRate", "avgWidth", "RMSE")
-  # met_list <- c("pmm", "rf", "cart")
-  # met_list <- c("default","pmm", "rf", "cart", "caliber","cc")
-  met_list <- c("default", "rf","cc")
-  met_list <- c("rf", "caliber")
-  nrun <- 2
-  debug <- TRUE
-  # debug <- FALSE
-  # resp is passed from fate_GLM1
-}
-nrun <- params$nrun
-debug <- params$debug
-mod4sim <- modList[1]
-hdir <- params$home_dir
+var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
 
-if(params$linux==FALSE){
-  hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  nrun <-5 
-  suffix <- "5reps"
-  debug <- TRUE
-}
-
-cat(">> home directory:", hdir, " & number of runs:", nrun, "& output suffix:", suffix)
-
-# var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age") # just the vars w/ missing data or interactions
-var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age", "speciesLETE:obs_int", "obs_int", "fdate") # all vars
 bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
-# bias_names <- c("bias","pctBias", "covRate", "avgWidth", "RMSE", "SD")
-# can't actually use the interaction term in the imputation model bc need identical data for AIC comparison
-# won't so this because I also don't know  the specific relationship of the interaction
-# , met_list <- c("default","pmm", "rf", "cart", "caliber","default.int","pmm.int","passive.int","cc")
-# met_list <- c("default","pmm", "rf", "cart", "caliber","cc","full") # don't need full here?
-met_list <- c("default","pmm", "rf", "cart", "caliber","cc")# don't need full here?
 
-# col_sel <- c(prVars,resp) # columns to select, as strings
-cat("\n>> methods to test:", met_list)
-cat("\n>> bias to be calculated:", bias_names)
+met_list <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
+
+if (params$test){ 
+  # met_list <- c("default", "passive", "stratify", "cc", "rf") # 1 representative from each if-statement
+  # met_list <- c("passive", "stratify", "rf")  # more reduced list
+  # met_list <- c("passive", "stratify")  # more reduced list
+  # bias_names <- c("pctBias", "covRate", "RMSE")
+  # bias_names <- c("pctBias", "covRate")
+  # params$xdeb <- TRUE# doesn't work - "cannot change value of locked binding for 'params'"
+  # params$ipl <- FALSE
+  # params$nrun <- 2# doesn't work - "cannot change value of locked binding for 'params'"
+}
+
+formulas <- readRDS("form_lists.rds")
+metLists <- readRDS("met_lists.rds")
+names(metLists)[3]
+
+cat("\n\n>> number of imputations:", params$m, class(params$m))
+cat("\t>> & methods to test:", met_list)
+cat("\n\n>> bias to be calculated:", bias_names, "\n")
+cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 
 ```
 
 #### Run the simulation & calculate the bias:
 
 ```{r, warning=FALSE}
-# Create the simulated data with NAs (using the complete-case df):
-# sim_dat <- mkSimDat(nd = ndGLM_scl_cc,col_sel=col_sel, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
-sim_dat <- mkSimDat(nd = dat4sim, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
-# sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = debug, convFact = TRUE)
-missing_tab("sim_dat",prVars,)
-# imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=500)
-# imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = resp, vars = var_list, mod = mod,seed=61389, nruns=nrun, debug = TRUE)
-  # imp_sim <- runSim(datNA = sim_dat$amp,col_sel = col_sel,mets = met_list, resp = r, vars = var_list, mod = mod4sim, nruns=nrun, debug = FALSE) # don't want to set seed
-# mods4sim <- modList[c(1,2,8,9,16) ]
-# could probably jsut create an index of the models you want and then seq_along the whole list. not sure which is faster
-mods4sim <- modList[c(1,8,16) ]
-mods4sim
-# mods4sim <- modList[c(1,8) ]
-names(mods4sim) <- c("m1", "m8", "m16")
-# names(mods4sim) <- c("m1", "m8")
-# if(FALSE){
-#   z <- 3
-#   # r <- "is_u"
-#   r <- "HF_mis"
-# }
-# mods4sim
+# # Create the simulated data with NAs (using the complete-case df):
+# # sim_dat <- mkSimDat(nd = ndGLM_scl_cc,col_sel=col_sel, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
+# sim_dat <- mkSimDat(nd = dat4sim, vars=var_list, method = "amp", wt = TRUE, debug = params$deb, convFact = TRUE)
+# # sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = debug, convFact = TRUE)
+# missing_tab("sim_dat",prVars,)
+```
+
+```{r sim, fig.dim=c(12,5)}
+if(FALSE){
+  r <- "is_u"
+  
+}
+for(r in resp_list){
+  # col_sel <- c(prVars,r) # columns to select, as strings
+  col_list<- c(prVars,r) # columns to select, as strings
+  form_list <- formulas[[r]]
+  # col_sel
+  # if(params$deb){
+  cat("\n\n********************************************************************************************")
+  # cat("\n>> response:", r,"\n\t& columns for imputation:", col_sel)
+  cat("\n>> response:", r,"\n\t& columns for imputation:", col_list)
+  cat("\n********************************************************************************************\n\n")
+  # imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mets = met_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mLists = metLists,forms=form_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  
+  if(params$deb){
+    cat("\n\n********************************************************************************************\n")
+    cat(">>>>> CALCULATE BIAS VALUES: \n")
+    cat("********************************************************************************************\n")
+  }
+  
+  bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,hdir = params$hdir,resp = r, vars = var_list, mods=mods4sim, mets = met_list, biasVals = bias_names, debug = params$deb, xdebug=params$xdeb)
+  if(params$deb) print(bias_out)
+  
+}
+```
+
+
+```{r eval=FALSE, warning=FALSE, include=FALSE}
 for(z in seq_along(mods4sim)){
   # , cat("\n>>model:", names(model), model)
   cat("\n********************************************************************************************\n")
