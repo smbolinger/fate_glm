@@ -43,7 +43,7 @@ if(length(arg)==0){
 }
 if(params$lin==FALSE){
   params$hdir <- "C:/Users/sarah/Dropbox/Models/fate_glm/" 
-  params$m <- 5
+  params$m <- 25
   params$nrun <-5
   params$deb <- TRUE
   params$xdeb <- TRUE
@@ -88,7 +88,7 @@ if(FALSE){
   # met_list <- c("default","pmm", "rf", "cart", "caliber","cc")
   met_list <- c("default", "rf","cc")
   met_list <- c("default","rf", "caliber", "cc")
-  params$nrun <- 2
+  params$nrun <- 1
   params$deb <- TRUE
 }
 
@@ -152,8 +152,9 @@ for(r in resp_list){
   cat("\n********************************************************************************************\n\n")
   # }
   # imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mets = met_list,forms=form_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
+  # if(debug) Rprof()
   imp_sim <- runSim(fullDat=dat4sim,col_sel = col_list,mLists = metLists,forms=form_list, resp = r, vars = var_list, mods = mods4sim,par=params) # don't want to set seed
-  
+  # if(debug) Rprof(NULL)
   # if(params$deb){
   #   cat("\n\n********************************************************************************************\n")
   #   cat(">>>>> BIAS VALUES: \n")
@@ -164,3 +165,73 @@ for(r in resp_list){
   # bias_out <- parAvg(fullDat = dat4sim, impDat = imp_sim,hdir = params$hdir,resp = r, vars = var_list, mods=mods4sim, mets = met_list, biasVals = bias_names, debug = params$deb, xdebug=params$xdeb)
 }
 # }
+
+### PROFILING THE CODE
+if(FALSE){
+  for(i in 1:2){
+    # resp <- "is_u"
+    for(resp in resp_list){
+      col_list<- c(prVars,resp )# columns to select, as strings
+      form_list <- formulas[[resp]]
+      filename <- sprintf("out/rprof_%s_%s.out", resp, i)
+      Rprof(filename)
+      runSim(fullDat=dat4sim, 
+             col_sel=col_list,
+             mLists=metLists,
+             forms=form_list,
+             resp=resp,
+             vars=var_list,
+             mods=mods4sim,
+             par=params
+             )
+      Rprof(NULL)
+    }
+    # filename <- paste0("rprof_",i,".out")
+    
+  }
+}
+if(FALSE){
+    for(resp in resp_list){
+      col_list<- c(prVars,resp )# columns to select, as strings
+      form_list <- formulas[[resp]]
+      filename <- sprintf("out/prvis_%s.out", resp)
+      prv<- profvis::profvis(
+        runSim(fullDat=dat4sim, 
+               col_sel=col_list,
+               mLists=metLists,
+               forms=form_list,
+               resp=resp,
+               vars=var_list,
+               mods=mods4sim,
+               par=params
+               ),
+        prof_output = filename
+        )
+      htmlwidgets::saveWidget(prv, sprintf("profile_%s.html", resp))
+    }
+}
+
+if(FALSE){
+    for(resp in resp_list){
+      col_list<- c(prVars,resp )# columns to select, as strings
+      form_list <- formulas[[resp]]
+      filename <- sprintf("out/prvis_%s.out", resp)
+      aDat <- mkSimDat(seeed=13, nd=dat4sim, vars=var_list, convFact=TRUE)$amp
+      for(met in met_list){
+        prv<- profvis::profvis(
+          mkImpSim(fullDat=dat4sim,
+                   ampDat=aDat,
+                   cols=col_list,
+                   resp=resp,
+                   mods=mods4sim,
+                   vars=var_list,
+                   met=met,
+                   form_list=form_list
+                   
+                   ),
+          prof_output = filename
+          )
+        htmlwidgets::saveWidget(prv, sprintf("profile2_%s_%s.html", resp, met))
+      }
+    }
+}
