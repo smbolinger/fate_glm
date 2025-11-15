@@ -7,6 +7,8 @@
 #*.txt
 *.docx
 *.html
+*.out
+*.pdf
 # History files
 .Rhistory
 .Rapp.history
