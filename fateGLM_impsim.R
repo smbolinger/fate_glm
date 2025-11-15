@@ -73,11 +73,13 @@ levels(dat4sim$is_u)   <- c(0,1)
 
 # made the responses into "yes/no" so I could import them automatically as factors
 prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
-resp_list <- c("is_u", "HF_mis")
+# resp_list <- c("is_u", "HF_mis")
 
-var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
-bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
-met_list <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
+# var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
+vars <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
+# bias_names <- c("value","bias", "pctBias", "covRate", "avgWidth", "RMSE", "SD")
+# met_list <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
+mets <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
 
 ## FOR TESTING:
 if(FALSE){
@@ -101,7 +103,7 @@ names(metLists)[3]
 
 cat("\n\n>> number of imputations:", params$m, class(params$m))
 cat("\t>> & methods to test:", met_list)
-cat("\n\n>> bias to be calculated:", bias_names, "\n")
+# cat("\n\n>> bias to be calculated:", bias_names, "\n")
 cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 
 #########################################################################################
