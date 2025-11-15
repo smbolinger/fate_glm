@@ -19,7 +19,7 @@ params <- list(nrun=100, hdir="/home/wodehouse/projects/fate_glm/",
                ipl=FALSE,
                lin=FALSE,
                m=20)
-# params <- list(nrun=100, deb=FALSE, lin=FALSE)
+
 arg <- commandArgs(trailingOnly=TRUE)
 if(length(arg)==0){
   # stop("at minimum, needs argument for 'lin' (T or F)")
@@ -48,38 +48,31 @@ cat(">> home directory:", params$hdir, "\t> & number of runs:", params$nrun, "\t
 
 modList <- readLines("modList.txt")
 mods4sim <- modList[c(1,8,16) ]
-# mods4sim
 names(mods4sim) <- c("m1", "m8", "m16")
+formulas <- readRDS("form_lists.rds")
+metLists <- readRDS("met_lists.rds")
 
 dat4sim <- read.csv("dat_complete.csv", stringsAsFactors = TRUE)
-# dat4simnum <- read.csv("dat_num.csv"  )
-# make 'H' the reference category:
-dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H")
+dat4sim$cam_fate <- relevel(dat4sim$cam_fate, ref="H") # make 'H' the reference category
 dat4sim$species <- relevel(dat4sim$species, ref="LETE")
-# dat4simnum$cfate <- relevel(dat4simnum$cfate, ref=1)
 levels(dat4sim$HF_mis) <- c(0,1)
 levels(dat4sim$is_u)   <- c(0,1)
  
-#########################################################################################
-
 prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
 vars <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesCONI", "speciesCONI:nest_age", "speciesCONI:obs_int", "obs_int", "fdate") # all vars
 mets <- c("default","pmm", "rf", "cart", "caliber","passive", "stratify","cc")# don't need full here?
 
-formulas <- readRDS("form_lists.rds")
-metLists <- readRDS("met_lists.rds")
-names(metLists)[3]
+resp <- "HF_mis"
+col_list<- c(prVars,resp )# columns to select, as strings
+form_list <- formulas[[resp]]
+
+#########################################################################################
 
 cat("\n\n>> number of imputations:", params$m, class(params$m))
-# cat("\t>> & methods to test:", met_list)
 cat("\t>> & methods to test:", mets)
 # cat("\n\n>> bias to be calculated:", bias_names, "\n")
 cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 
-resp <- "HF_mis"
-col_list<- c(prVars,resp )# columns to select, as strings
-form_list <- formulas[[resp]]
-# metLists
 cat("\n\n********************************************************************************************")
 cat("\n>> response:", resp,"\n\t& columns for imputation:", col_list)
 cat("\n********************************************************************************************\n\n")
@@ -95,10 +88,10 @@ dimnames(res) <- list(sort(as.character(vars)),
                       names(mods4sim)
                       )
 
-cat(sprintf(">>> running simulation %s times\n", params$nrun))
+cat(sprintf(">>> running simulation %s times\n\n", params$nrun))
 for(run in 1:params$nrun){
   cat(run)
-  datNA <- mkSimDat(nd = dat4sim, seeed = run, vars=vars, method = "amp", wt = TRUE, xdebug=xdebug, debug = debug, convFact = TRUE)
+  datNA <- mkSimDat(nd = dat4sim, seeed = run, vars=vars, method = "amp", wt = TRUE, xdebug=params$xdeb, debug = params$deb, convFact = TRUE)
   datNA <- datNA$amp
   
   for(x in seq_along(mets)){ # does matching by index help the trycatch statement?
@@ -147,8 +140,9 @@ for(run in 1:params$nrun){
     nowtime <- format(Sys.time(), "%d%b%H%M")
     fname <- paste(sprintf("out/runs%sto%s_%s.rds", begn, endd, nowtime))
     saveRDS(res[,,begn:endd,,], fname)
+    cat(sprintf(">>>>>> saved runs %s to %s to file!", begn, endd))
   }
-  return(res)
+  # return(res)
 }
 
 # }
