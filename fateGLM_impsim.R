@@ -102,7 +102,8 @@ metLists <- readRDS("met_lists.rds")
 names(metLists)[3]
 
 cat("\n\n>> number of imputations:", params$m, class(params$m))
-cat("\t>> & methods to test:", met_list)
+# cat("\t>> & methods to test:", met_list)
+cat("\t>> & methods to test:", mets)
 # cat("\n\n>> bias to be calculated:", bias_names, "\n")
 cat("\n\n>>>> date & time:", format(Sys.time(), "%d-%b %H:%M\n"))
 
