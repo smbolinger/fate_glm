@@ -119,7 +119,7 @@ for(run in 1:params$nrun){
       },
       error = function(e){
         cat("\nERROR:", conditionMessage(e), "\n")
-        next
+        # next
         # return(NULL)
         # skiptoNext <- TRUE
         skiptoNext <<- TRUE  # superassignment operator- not sure if necessary
