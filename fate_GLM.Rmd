@@ -23,9 +23,10 @@ params:
   n_run: 500 
   imp_met: "pmm"
   home_dir: "/home/wodehouse/projects/fate_glm/"
-  data_file: "dataframes/ndGLM1_field_fate9_final_obs_int3_final_obs_date2.rds"
+  data_file: "ndGLM1.rds"
 ---
 
+  data_file: "dataframes/ndGLM1_field_fate9_final_obs_int3_final_obs_date2.rds"
 ## Introduction
 
 What to do with this script:

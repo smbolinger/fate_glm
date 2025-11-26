@@ -16,6 +16,7 @@ output: html_document
 #                      you create the plots
 # datName = "ndGLM_"
 # prVars <- c("species", "cam_fate", "obs_int", "nest_age", "fdate")
+
 dat = get(datName)
 # print doesn't work here
 # print("data used for diagnostics:", datName)
@@ -268,6 +269,60 @@ if(missing_diag){
 # }
 } else {
   cat("\t\t>> skip")
+}
+```
+```{r}
+if(FALSE){
+  source("missing_data.R")
+}
+if (missing_data){
+  vNames <- c("nest_age" = "NEST_AGE",
+              "obs_int" = "FINAL_INTERVAL",
+              "fdate" = "END_DATE",
+              "species" = "SPECIES",
+              "is_u" = "MARKED_UNKNOWN",
+              "HF_mis" = "MISCLASSIFIED",
+              "cam_fate" = "TRUE_FATE",
+              "any_missing" = "ANY_MISSING"
+              )
+  # ndGLM1 <- readRDS("dataframes/ndGLM1.rds")
+  
+  # vis_miss(dat4imp)
+  # ndGLM1$anyM <- ifelse(is.na(ndGLM1), NA, "no") # this is colwise, not rowwise
+  allPl <- ndGLM1 %>%
+    # select(species, cam_fate, fdate, nest_age, obs_int) %>%
+    select(is_u, HF_mis, species, cam_fate,  obs_int, fdate, nest_age) %>%
+  #   rowwise %>%
+  #   mutate(anyMiss = ifelse(any(is.na(.)), NA, "numeric")) %>%
+  #   # mutate(anyMiss = ifelse(if_any(is.na(.)), NA, "numeric")) %>%
+    vis_miss(pTitle="Missingness -\nBy Variable",labs=vNames)
+  ggsave("figures/allPl.svg", allPl, device="svg", width=11, height=9, unit="in")
+  
+  # allPljj
+  # nd_anymiss <- function(x) ifelse(any(is.na(x)), yes=NA, no="no")
+  ndGLM1$any_missing <-ndGLM1 %>%
+    # select(species, cam_fate, fdate, nest_age, obs_int) %>%
+    select(is_u, HF_mis, species, cam_fate,  obs_int, fdate, nest_age) %>%
+    # select(is_u, HF_mis, species, cam_fate, fdate, nest_age, obs_int) %>%
+    apply(1, function(x) ifelse(any(is.na(x)), yes=NA, no="no") )
+  # nd_anymiss
+  # anyPl <- vis_miss(as.data.frame(any_missing), pTitle="Missingness -\nBy Observation", labs=vNames)
+  anyPl <- ndGLM1 %>% select(any_missing) %>% as.data.frame() %>% vis_miss(pTitle="Missingness-\nBy Observation", labs=vNames)
+  # anyPl <- vis_miss(as.data.frame(ndGLM1$any_missing), pTitle="Missingness -\nBy Observation", labs=vNames)
+  
+  ggsave("figures/anyPl.svg", anyPl,device = "svg",width = 4, height=9, unit="in")
+  
+  
+  # ggsave("figures/allPl.svg", allPl, device="svg", width=11, height=9, unit="in")
+  # nd_anymiss <-function(nd){
+  #   lapply(nd, function(x) ifelse(any(is.na(x)), yes=NA, no="no") )
+  
+  # nd_anymiss(ndGLM1)
+  # ndGLM1 %>%
+  #   select(species, cam_fate, fdate, nest_age, obs_int) %>%
+  #   rowwise %>%
+  #   nd_anymiss()
+  # ndMiss <- purrr::map_df(ndGLM1, nd_anymiss) # goes across cols to see if there is any NA
 }
 ```
 

@@ -8,7 +8,7 @@ output:
   pdf_document: default
 params:
   home_dir: "C:/Users/sarah/Dropbox/Models/fate_glm"
-  data_file: "grouped_0805_1225_ed2_20250906_1658.csv"
+  data_file: "cleaned_data/import_name.txt"
   missing_diag: TRUE
   separation: TRUE
   debug: TRUE
@@ -17,6 +17,8 @@ params:
   rtf: TRUE
 ---
 
+  data_file: '`r paste0(homeDir,read_file(paste0(homeDir,"cleaned_data/import_name.txt")))`'
+  data_file: "grouped_0805_1225_ed2_20250906_1658.csv"
 ## 0. SETUP
 
 ```{r setup, include=FALSE}
@@ -28,6 +30,7 @@ library(tidyverse)
 ```
 
 ```{r}
+# filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
 missing_diag <- params$missing_diag
 separation <- params$separation
 homeDir <- params$home_dir
@@ -49,7 +52,7 @@ source("missing_data.R")
 ```{r load-data, echo=FALSE, message=FALSE}
   # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
   # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
-filename <- params$data_file
+filename <- read_file(params$data_file)
 cat("importing from:",filename,"\n\n")
 # nData <- read_csv(filename)[-1]
 nData <- read_csv(filename) # To run python code, need reticulate package.
@@ -62,8 +65,14 @@ ff_val <- "field_fate9"
 nData[[ff_val]]
 nData$fdate      <- nData$final_obs_date
 nData$obs_int    <- nData$final_obs_int
-nDat$field_fate  <- nData[[ff_val]]
+nData$field_fate  <- nData[[ff_val]]
+nData$final_fate  <- nData$final_fate2
+nData$cam_fate <- nData$cam_fate2
+nData$nest_age <- nData$nest_age3
+```
 
+
+```{r filter-data}
 nd <- nData %>%
   filter(nest!=20365) %>%  # found on hatch day
   filter( nest!=20259) %>% # NA for final_obs_int (not tracked to fate)
@@ -96,7 +105,8 @@ if(FALSE){
   ndGLM1 %>% select(nest, species, field_fate, cam_fate, fate, cfate, hatchfail, c_hatchfail, HF_mis, is_u) %>% write.csv(paste0("fates",now,".csv"))
 }
 print_vars(ndGLM1)
-saveRDS(ndGLM1, "dataframes/ndGLM1.rds")
+# saveRDS(ndGLM1, "dataframes/ndGLM1.rds")
+saveRDS(ndGLM1, "ndGLM1.rds")
 # saveRDS(nd, "nd.rds")
 rm(nd)
 ```
