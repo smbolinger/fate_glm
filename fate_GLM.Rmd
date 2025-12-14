@@ -10,6 +10,7 @@ output:
 editor_options:
   markdown:
     wrap: 72
+  chunk_output_type: inline
 params:
   miss_diag: FALSE
   sep_diag: FALSE
@@ -119,6 +120,8 @@ all_vars <- c(predictors, pred2 ,params$resp1, params$resp2)
 ```{r}
 # ndGLM1 <- readRDS("dataframes/ndGLM1.rds")
 ndGLM1 <- readRDS(params$data_file)
+print_vars(ndGLM1)
+print_resp(ndGLM1)
 ```
 
 
@@ -138,7 +141,14 @@ if (FALSE) ndGLM_ %>% sapply(function(x) sum(is.na(x)))
 ndGLM_$misclass[is.na(ndGLM_$misclass)] = 0  # there are sometimes weird missing values
 ndGLM_miss <- dat_miss(ndGLM1) # moved this elsewhere because it is used there
 saveRDS(ndGLM_, "dataframes/ndGLM_.rds")
+```
 
+
+```{r eval=FALSE, include=FALSE}
+print_vars(ndGLM_)
+print_resp(ndGLM_)
+print_stuff(ndGLM_)
+print_misclass(ndGLM_)
 # saveRDS(ndGLM1, file="dataframes/ndGLM1.rds")
 # rm(ndGLM1)
 ```
@@ -246,10 +256,10 @@ ndGLM_ %>%
 
 # I think I did this so they would become factors automatically, but now I have to make 
 # them back into 0-1 and still keep them as factors, which may take the same amt of code?
-ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"),
-                                          HF_mis = ifelse(HF_mis==1, "yes", "no"))
+ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = if_else(is_u==1, "yes", "no"),
+                                          HF_mis = if_else(HF_mis==1, "yes", "no"))
 # ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"))
-ff_num <- str_extract(ff_val, "\\d+")
+# ff_num <- str_extract(ff_val, "\\d+")
 # write.csv(ndGLM_scl_cc_1, sprintf("dat_complete_ff%s.csv",ff_num), row.names=FALSE)
 write.csv(ndGLM_scl_cc_1, "dat_complete.csv", row.names=FALSE)
 

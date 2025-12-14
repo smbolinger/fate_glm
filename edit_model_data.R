@@ -1,6 +1,6 @@
 #
 
-isU <- function(fate) ifelse(fate %in% c(7:9), 1, 0)
+isU <- function(fate) ifelse(fate %in% c(7:9), 1, 0) # 1 = marked unknown
 
 howMis <- function(fate, c_fate){
   dplyr::case_when(
@@ -15,8 +15,8 @@ add_vars <- function(ndat,  debug = F){
   ndGLM <- ndat %>%
     # could also change this to fate_corr, but it's doing the same thing...
     dplyr::mutate(hatchfail = dplyr::case_when(
-      fate %in% c(0, 2:6) ~ 0, # fail
-      fate == 1           ~ 1, # hatch
+      fate %in% c(1:6) ~ 1, # fail
+      fate == 0           ~ 0, # hatch
       fate == 7           ~ 7,
       # .data$fate == 8           ~ UHval,
       # .data$fate == 9           ~ UFval,
@@ -25,8 +25,10 @@ add_vars <- function(ndat,  debug = F){
 
     # why do I not a warning for cfate the way I did for fate?
     dplyr::mutate(c_hatchfail = dplyr::case_when(
-      cfate %in% c(0, 2:6) ~ 0,
-      cfate == 1           ~ 1,
+      #cfate %in% c(0, 2:6) ~ 0,
+      #cfate == 1           ~ 1,
+      cfate %in% c(1:6) ~ 1,
+      cfate == 0           ~ 0,
       cfate == 7           ~ 7,  # hopefully not many/any of these
       is.na(cfate)         ~ NA # NAs make comparison impossible; better to code as a number?
       # BUT this is a good way to catch them, and the data can't be used anyway
@@ -133,8 +135,10 @@ filter_dat1 <- function(nestData, sites=c("RUTE","RUTW"), spp=c("LETE","CONI"),
     # mutate(fdate=final_obs_date) %>%    # this is also done later?
     mutate(
       fate = case_match(field_fate,
-                                   "H"   ~ 1,
-                                   "F"   ~ 0,
+                                   #"H"   ~ 1,
+                                   #"F"   ~ 0,
+                                   "H"   ~ 0,
+                                   "F"   ~ 1,
                                    "D"   ~ 2,
                                    "S"   ~ 3,
                                    "A"   ~ 4,

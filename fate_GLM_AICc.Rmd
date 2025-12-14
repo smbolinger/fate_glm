@@ -3,6 +3,8 @@ title: "fateGLM_aic"
 author: "Sarah Bolinger"
 date: "`r Sys.Date()`"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
 
 #### Create and save the AIC table
@@ -16,7 +18,7 @@ output: html_document
 # if(FALSE) ff_val <- "field_fate10"
 fVar <- "allFates"
 uVar <- "UHisU"
-ff_num <- str_extract(ff_val, "\\d+")
+# ff_num <- str_extract(ff_val, "\\d+")
 # naVar <- naRm
 if(UHisH) uVar <- "UHisH" 
 # if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more complicated than I thought...
@@ -24,7 +26,8 @@ if(exists("nfate")) fVar <- paste0(nfate,"fates") # exists seems to be more comp
 # suffix = "_scl_cc_q1"
 ### why unname?
 paste(quest, fVar, sep="_")
-suffix = paste(quest,paste(fVar,paste0("ff",ff_num), sep="_"), sep="_")
+#suffix = paste(quest,paste(fVar,paste0("ff",ff_num), sep="_"), sep="_")
+suffix = paste(quest,fVar,  sep="_")
 
 aicTab <- unname(mods) %>% aic_mod()
 fname <- aicTab %>% save_tab(suffix=suffix, outdir = homeDir, rtf=TRUE)
@@ -70,7 +73,8 @@ for(m in 1:numMods){
                      resp=resp,
                      debug=FALSE,
                      # suffix=paste(datName,quest,ff_val,fVar,paste0("mod",mnum), sep="_"))
-                     suffix=paste(datName,quest,paste0("ff",ff_num),fVar,paste0("mod",mnum), sep="_"))
+                     # suffix=paste(datName,quest,paste0("ff",ff_num),fVar,paste0("mod",mnum), sep="_"))
+                     suffix=paste(datName,quest,fVar,paste0("mod",mnum), sep="_"))
   knitr::include_graphics(paste0(homeDir,"tables/",regrTab),
                           dpi=(1300/6)) # dpi setting = only thing that works
   # topMod = aicTab$`_data`$`__GT_ROWNAME_PRIVATE__`[1]

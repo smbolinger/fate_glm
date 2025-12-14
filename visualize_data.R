@@ -30,14 +30,28 @@ inspect_dat <- function(nestData){
     # cat("is there evidence of separation?\n", cam_sep)
 }
 
-print_vars <- function(ndGLM2){
-    cat("Camera fates:\n", table(ndGLM2$cam_fate))
-    cat("\nSpecies:\n", table(ndGLM2$species))
-    cat("\nFinal observation intervals:\n", table(ndGLM2$obs_int))
-    cat("\nDate fate was assigned:\n", table(ndGLM2$fate_date))
-    cat("\nNest age when fate assigned:\n", table(ndGLM2$nest_age))
+
+# print_vars <- function(ndGLM2){
+print_pred <- function(ndGLM2){
+  cat("Camera fates:\n")
+  print(table(ndGLM2$cam_fate, useNA="ifany"))
+  cat("\nSpecies:\n")
+  print(table(ndGLM2$species, useNA="ifany"))
+  cat("\nFinal observation intervals:\n")
+  print(table(ndGLM2$obs_int, useNA="ifany"))
+  cat("\nDate fate was assigned:\n")
+  #print(table(ndGLM2$fate_date, useNA = "ifany"))
+  print(table(ndGLM2$fdate, useNA = "ifany"))
+  cat("\nNest age when fate assigned:\n")
+  print(table(ndGLM2$nest_age, useNA = "ifany"))
 }
 
+print_resp <- function(ndGLM2){
+  cat("Number of nests misclassified (hatch or fail:\n")
+  print(table(ndGLM2$HF_mis, useNA="ifany"))
+  cat("Number of nests marked 'unknown' in the field:\n")
+  print(table(ndGLM2$is_u, useNA="ifany"))
+}
 
 print_stuff <- function(ndGLM2){
     cat("WITH 4 FATE CATEGORIES:\n")
@@ -49,9 +63,10 @@ print_stuff <- function(ndGLM2){
 
     cat("How many actually hatched:")
     table(ndGLM2$c_hatchfail)
-
-    cat("Number of nests misclassified (hatch or fail:")
-    table(ndGLM2$HF_mis)
+}
+print_misclass <- function(ndGLM2){
+  cat("Number of nests misclassified (hatch or fail:")
+  table(ndGLM2$HF_mis)
 
     cat("Number of failed nests misclassified:")
     table(ndGLM2$misclass[ndGLM2$final_fate %in% c(0, 2:6) ])
@@ -59,9 +74,10 @@ print_stuff <- function(ndGLM2){
     cat("Number of unknown nests newly classified:")
     table(ndGLM2$misclass[ndGLM2$final_fate %in% c(7,8)])
 
-    hfMis <- ndGLM2[ndGLM2$HF_mis==1,] # is this supposed to be ndGLM or ndGLM2?
-# cat("\nMisclassified nests by camera (true) fate:\n")
-# table(hfMis$c_hatchfail)
+  hfMis <- ndGLM2[ndGLM2$HF_mis==1,] # is this supposed to be ndGLM or ndGLM2?
+  cat("\nMisclassified nests by camera (true) fate:\n")
+  table(hfMis$cam_fate)
+  # table(hfMis$c_hatchfail)
 
     cat("\n\nUnknown nests with true fate hatch vs fail:\n")
     unk <- ndGLM2[ndGLM2$final_fate==7,]
@@ -79,6 +95,24 @@ print_stuff <- function(ndGLM2){
     hm <- ndGLM2[ndGLM2$HF_mis==1,]
     table(hm$species)
 }
+
+#' Print the response variables that were added
+#'
+print_vars <- function(ndGLM){
+  cat("\nhatchfail variable:\n")
+  print(table(ndGLM$hatchfail, useNA = "ifany"))
+  cat("\nc_hatchfail variable:\n")
+  print(table(ndGLM$c_hatchfail, useNA = "ifany"))
+  cat("\nHF_mis variable:\n")
+  print(table(ndGLM$HF_mis, useNA = "ifany"))
+  cat("\nmisclass variable:")
+  print(table(ndGLM$misclass, useNA = "ifany"))
+  cat("\nhow_mis variable:")
+  print(table(ndGLM$how_mis, useNA = "ifany"))
+  cat("\nis_u variable:")
+  print(table(ndGLM$is_u, useNA = "ifany"))
+}
+
 
 # fr_tab <- function(ndata, vars=c("HF_mis","misclass","is_u")){
 #mk_fr_tab <- function(ndata, homeDir, save=TRUE, vars="all", suffix="", debug=F){
@@ -305,23 +339,6 @@ plot_predictors <- function(resp, dat, vars,
 }
 
 
-
-#' Print the response variables that were added
-#'
-print_vars <- function(ndGLM){
-  cat("\nhatchfail variable:\n")
-  print(table(ndGLM$hatchfail, useNA = "ifany"))
-  cat("\nc_hatchfail variable:\n")
-  print(table(ndGLM$c_hatchfail, useNA = "ifany"))
-  cat("\nHF_mis variable:\n")
-  print(table(ndGLM$HF_mis, useNA = "ifany"))
-  cat("\nmisclass variable:")
-  print(table(ndGLM$misclass, useNA = "ifany"))
-  cat("\nhow_mis variable:")
-  print(table(ndGLM$how_mis, useNA = "ifany"))
-  cat("\nis_u variable:")
-  print(table(ndGLM$is_u, useNA = "ifany"))
-}
 
 suppress_warnings <- function(.expr, .f, ...) {
   eval.parent(substitute(
