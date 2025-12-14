@@ -8,166 +8,198 @@
 #' @export
 
 inspect_dat <- function(nestData){
-  # could add a vars argument
-  cat("visually check for outliers in:")
-  plot(nestData$nest_age, main="Nest Age")
-  plot(nestData$fate_date, main="Fate Date")
-  plot(nestData$obs_int, main="Final Obs Interval")
+    # could add a vars argument
+    cat("visually check for outliers in:")
+    plot(nestData$nest_age, main="Nest Age")
+    plot(nestData$fate_date, main="Fate Date")
+    plot(nestData$obs_int, main="Final Obs Interval")
 
 
-  cormat <- nestData %>%
-  dplyr::select(.data$nest_age, .data$obs_int, .data$fdate) %>%
-  data.matrix() %>%
-  PerformanceAnalytics::chart.Correlation(histogram=T)
+    cormat <- nestData %>%
+        dplyr::select(.data$nest_age, .data$obs_int, .data$fdate) %>%
+        data.matrix() %>%
+        PerformanceAnalytics::chart.Correlation(histogram=T)
 
-  cat("any evidence of correlation between variables?")
-  cormat
+    cat("any evidence of correlation between variables?")
+    cormat
     # dataM = ndGLM2
-  # cam_sep <- glm(is_u ~ species + obs_int * cam_fate + nest_age,
-  #                data=dataM,
-  #                family=binomial,
-  #                method=detectseparation::detect_separation)
-  # cat("is there evidence of separation?\n", cam_sep)
+    # cam_sep <- glm(is_u ~ species + obs_int * cam_fate + nest_age,
+    #                data=dataM,
+    #                family=binomial,
+    #                method=detectseparation::detect_separation)
+    # cat("is there evidence of separation?\n", cam_sep)
 }
 
-
-
 print_vars <- function(ndGLM2){
-  cat("Camera fates:\n", table(ndGLM2$cam_fate))
-  cat("\nSpecies:\n", table(ndGLM2$species))
-  cat("\nFinal observation intervals:\n", table(ndGLM2$obs_int))
-  cat("\nDate fate was assigned:\n", table(ndGLM2$fate_date))
-  cat("\nNest age when fate assigned:\n", table(ndGLM2$nest_age))
+    cat("Camera fates:\n", table(ndGLM2$cam_fate))
+    cat("\nSpecies:\n", table(ndGLM2$species))
+    cat("\nFinal observation intervals:\n", table(ndGLM2$obs_int))
+    cat("\nDate fate was assigned:\n", table(ndGLM2$fate_date))
+    cat("\nNest age when fate assigned:\n", table(ndGLM2$nest_age))
 }
 
 
 print_stuff <- function(ndGLM2){
-  cat("WITH 4 FATE CATEGORIES:\n")
-  cat("Camera fates:\n")
-  table(ndGLM2$cam_fate)
+    cat("WITH 4 FATE CATEGORIES:\n")
+    cat("Camera fates:\n")
+    table(ndGLM2$cam_fate)
 
-  cat("How many we said hatched:")
-  table(ndGLM2$hatchfail)
+    cat("How many we said hatched:")
+    table(ndGLM2$hatchfail)
 
-  cat("How many actually hatched:")
-  table(ndGLM2$c_hatchfail)
+    cat("How many actually hatched:")
+    table(ndGLM2$c_hatchfail)
 
-  cat("Number of nests misclassified (hatch or fail:")
-  table(ndGLM2$HF_mis)
+    cat("Number of nests misclassified (hatch or fail:")
+    table(ndGLM2$HF_mis)
 
-  cat("Number of failed nests misclassified:")
-  table(ndGLM2$misclass[ndGLM2$final_fate %in% c(0, 2:6) ])
+    cat("Number of failed nests misclassified:")
+    table(ndGLM2$misclass[ndGLM2$final_fate %in% c(0, 2:6) ])
 
-  cat("Number of unknown nests newly classified:")
-  table(ndGLM2$misclass[ndGLM2$final_fate %in% c(7,8)])
+    cat("Number of unknown nests newly classified:")
+    table(ndGLM2$misclass[ndGLM2$final_fate %in% c(7,8)])
 
-  hfMis <- ndGLM2[ndGLM2$HF_mis==1,] # is this supposed to be ndGLM or ndGLM2?
-  # cat("\nMisclassified nests by camera (true) fate:\n")
-  # table(hfMis$c_hatchfail)
+    hfMis <- ndGLM2[ndGLM2$HF_mis==1,] # is this supposed to be ndGLM or ndGLM2?
+# cat("\nMisclassified nests by camera (true) fate:\n")
+# table(hfMis$c_hatchfail)
 
-  cat("\n\nUnknown nests with true fate hatch vs fail:\n")
-  unk <- ndGLM2[ndGLM2$final_fate==7,]
-  table(unk$c_hatchfail)
+    cat("\n\nUnknown nests with true fate hatch vs fail:\n")
+    unk <- ndGLM2[ndGLM2$final_fate==7,]
+    table(unk$c_hatchfail)
 
-  cat("\n\nFailed nests where cause of failure was wrong:\n")
-  f <- ndGLM2[ndGLM2$c.fate %in% c(0, 2:6) & ndGLM2$final_fate %in% c(0, 2:6),]
-  table(f$misclass)
+    cat("\n\nFailed nests where cause of failure was wrong:\n")
+    f <- ndGLM2[ndGLM2$c.fate %in% c(0, 2:6) & ndGLM2$final_fate %in% c(0, 2:6),]
+    table(f$misclass)
 
-  cat("\n\nMisclassified nests by species:\n")
-  m <- ndGLM2[ndGLM2$misclass==1,]
-  table(m$species)
+    cat("\n\nMisclassified nests by species:\n")
+    m <- ndGLM2[ndGLM2$misclass==1,]
+    table(m$species)
 
-  cat("\n\nH/F misclassified by species:")
-  hm <- ndGLM2[ndGLM2$HF_mis==1,]
-  table(hm$species)
-
-
+    cat("\n\nH/F misclassified by species:")
+    hm <- ndGLM2[ndGLM2$HF_mis==1,]
+    table(hm$species)
 }
 
-
-
 # fr_tab <- function(ndata, vars=c("HF_mis","misclass","is_u")){
-mk_fr_tab <- function(ndata, vars="all", suffix="", debug=F){
+#mk_fr_tab <- function(ndata, homeDir, save=TRUE, vars="all", suffix="", debug=F){
+mk_fr_tab <- function(ndata, save=TRUE, vars="all", suffix="", debug=F){
 
-  pre1 <- ndata |>
-    dplyr::mutate(HF_mis = HF_mis == 1) %>%                            # response var # 1
-    gtsummary::tbl_summary(by=HF_mis,
-                include=c(species, cam_fate),
-                type=list(where(is.logical) ~ "categorical"), #doesn't work
-                label=list(species ~ "Species",
-                           cam_fate ~ "Camera fate"),
-                statistic=list(all_categorical()~"{n}")) %>%
-    gtsummary::modify_header(label ~ "**Variable**",
-                  all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
+    pre1 <- ndata |>
+        dplyr::mutate(HF_mis = HF_mis == 1) %>%                            # response var # 1
+        gtsummary::tbl_summary(by=HF_mis,
+                               include=c(species, cam_fate),
+                               type=list(where(is.logical) ~ "categorical"), #doesn't work
+                               label=list(species ~ "Species",
+                                          cam_fate ~ "Camera fate"),
+                               statistic=list(all_categorical()~"{n}")) %>%
+        gtsummary::modify_header(label ~ "**Variable**",
+                                 all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
 
-    gtsummary::modify_spanning_header(c("stat_1", "stat_2") ~ "**Nest misclassified (H/F)**") |>
-    gtsummary::bold_labels()
+        gtsummary::modify_spanning_header(c("stat_1", "stat_2") ~ "**Nest misclassified (H/F)**") |>
+        gtsummary::bold_labels()
 
-  pre2 <- ndata %>%
-    dplyr::mutate(misclass = misclass == 1) %>%                       # response var # 2
-    gtsummary::tbl_summary(by=misclass,
-                include=c(species, cam_fate),
-                type=list(where(is.logical) ~ "categorical"), #doesn't work
-                label=list(species ~ "Species",
-                           cam_fate ~ "Camera fate"),
-                statistic=list(all_categorical()~"{n}")) %>%
-    gtsummary::modify_header(label ~ "**Variable**",
-                  all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
-    gtsummary::modify_spanning_header(c("stat_1", "stat_2") ~ "**Nest misclassified (all fates)**") %>%
-    gtsummary::bold_labels()
+    #pre2 <- ndata %>%
+    #    dplyr::mutate(misclass = misclass == 1) %>%                       # response var # 2
+    #    gtsummary::tbl_summary(by=misclass,
+    #                           include=c(species, cam_fate),
+    #                           type=list(where(is.logical) ~ "categorical"), #doesn't work
+    #                           label=list(species ~ "Species",
+    #                                      cam_fate ~ "Camera fate"),
+    #                           statistic=list(all_categorical()~"{n}")) %>%
+    #    gtsummary::modify_header(label ~ "**Variable**",
+    #                             all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
+    #    gtsummary::modify_spanning_header(c("stat_1", "stat_2") ~ "**Nest misclassified (all fates)**") %>%
+    #    gtsummary::bold_labels()
 
-  pre3 <- ndata |>
-    dplyr::mutate(is_u = is_u == 1) %>%                                # response var # 3
-    gtsummary::tbl_summary(by=is_u,
-                include=c(species, cam_fate),
-                label=list(species ~ "Species",
-                           cam_fate ~ "Camera fate"),
-                statistic=list(all_categorical()~"{n}")) %>%
+    pre3 <- ndata |>
+        dplyr::mutate(is_u = is_u == 1) %>%                                # response var # 3
+        gtsummary::tbl_summary(by=is_u,
+                               include=c(species, cam_fate),
+                               label=list(species ~ "Species",
+                                          cam_fate ~ "Camera fate"),
+                               statistic=list(all_categorical()~"{n}")) %>%
 
-    gtsummary::modify_header(label ~ "**Variable**",
-                  all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
-    gtsummary::modify_spanning_header(c("stat_1", "stat_2") ~ "**Marked unknown in field**") %>%
-    gtsummary::bold_labels()
-  if(vars=="all"){
-    pr <- gtsummary::tbl_merge(tbls=list(pre1, pre2, pre3),
-                               tab_spanner = c("**Misclassified (H/F)**",
-                                               "**Misclassified**",
-                                               "**Marked unknown**"))
-  } else if(vars=="misclass"){
-    pr <- gtsummary::tbl_merge(tbls=list(pre3, pre2),
-                               tab_spanner = c(  "**Marked unknown**",
-                                                 "**Misclassified**"))
+        gtsummary::modify_header(label ~ "**Variable**",
+                                 all_stat_cols() ~ "**{level}**<br>(N={n})") %>%
+        gtsummary::modify_spanning_header(c("stat_1", "stat_2") ~ "**Marked unknown in field**") %>%
+        gtsummary::bold_labels()
+    if(vars=="all"){
+        pr <- gtsummary::tbl_merge(tbls=list(pre1, pre2, pre3),
+                                   tab_spanner = c("**Misclassified (H/F)**",
+                                                   "**Misclassified**",
+                                                   "**Marked unknown**"))
+    } else if(vars=="misclass"){
+        pr <- gtsummary::tbl_merge(tbls=list(pre3, pre2),
 
-  } else if(vars=="HF_mis"){
-    pr <- gtsummary::tbl_merge(tbls=list(pre3,pre1 ),
-                               tab_spanner = c("**Marked unknown**",
-                                               "**Misclassified (H/F)**"))
+                                   tab_spanner = c(  "**Marked unknown**",
+                                                   "**Misclassified**"))
 
-  } else {
-    print("invalid argument - vars")
-  }
+    } else if(vars=="HF_mis"){
+        pr <- gtsummary::tbl_merge(tbls=list(pre3,pre1 ),
+                                   tab_spanner = c("**Marked unknown**",
+                                                   "**Misclassified (H/F)**"))
 
-  fr_tab <- pr %>%
-    gtsummary::as_gt() %>%
-    gt::tab_options(table.width = gt::pct(40))
+    } else {
+        print("invalid argument - vars")
+    }
 
-  # outd <- paste0(homeDir,"/out/")
-  outd <- paste0(homeDir,"/tables/")
-  # can't just pass the name or it can't find the table itself?
-  # filename <- save_tab("fr_tab1",outdir=outd, suffix = suffix,rtf = rtfOn)
-  filename <- save_tab(fr_tab,outdir=outd, suffix = suffix,rtf = rtfOn)
-  # now = format(Sys.time(), "%m%d_%H%M_")
-  # filename <- ifelse(
-  #   "2021" %in% year,
-  #   sprintf("frtab_inc2021_%s.png", now),
-  #   sprintf("frtab_no2021_%s.png", now)
-  # )
-  # filename2 <- sprintf("fr_tab_%s_%s.rtf", now, suffix)
-  # filename2 <- make_fname("fr_tab", suffj)
-  # pr %>% gt::gtsave(filename=filename, path="analysis/", vwidth=1200, vheight=800)
-  # pr %>% gt::gtsave(filename=filename2, path="analysis/", vwidth=1200, vheight=800)
+    if(debug) cat("\no o o FREQUENCY TABLE: o o o \n")
+    if(debug)  qvcalc::indentPrint(as_tibble(pr))
 
-  return(filename)
+    dummy_var <- function(mat, debb=debug){
+    #dummy_var <- function(mat, debug=TRUE){
+        if (debb) cat("\ndimensions of matrix:", dim(mat))
+        rownames(mat) <- seq(1,nrow(mat)) # maybe need to set rownames before picking out 2:3?
+        rownames(mat)[2:3] <- paste0("species", mat[2:3,1])
+        rownames(mat)[5:10] <- paste0("cam_fate", mat[5:10,1])
+        mat <- mat[-c(1,4),-1]
+        rnames <- rownames(mat)
+        if(debb) cat("\trownames:", rnames)
+        if(debb) cat("\tlength of rownames:", length(rnames), length(rownames(mat)))
+        mat <- apply(mat, 2, as.numeric)
+        rownames(mat) <- rnames
+        colnames(mat) <- c("no", "yes")
+        return(mat)
+     }
+
+    fr_tab <- pr %>%
+        gtsummary::as_gt() %>%
+        gt::tab_options(table.width = gt::pct(40))
+
+    fr_mat1 <- pre1 %>% 
+        as_tibble() %>% 
+        as.matrix() %>%
+        dummy_var()
+     if(debug) cat("\n+++ frequencies for q1 - dimnsions: ", dim(fr_mat1), "+++ and matrix: \n")
+     if(debug) qvcalc::indentPrint(fr_mat1)
+
+    fr_mat2 <- pre3 %>% 
+        as_tibble() %>% 
+        as.matrix() %>%
+        dummy_var()
+     #fr_mat2 <- dummy_var(fr_mat2)
+     if(debug) cat("\n+++ frequencies for q2 - dimnsions: ", dim(fr_mat2), "+++ and matrix: \n")
+     if(debug) qvcalc::indentPrint(fr_mat2)
+
+    # outd <- paste0(homeDir,"/out/")
+    # can't just pass the name or it can't find the table itself?
+    # filename <- save_tab("fr_tab1",outdir=outd, suffix = suffix,rtf = rtfOn)
+    if (save){
+        outd <- paste0(homeDir,"/tables/")
+        filename <- save_tab(fr_tab,outdir=outd, suffix = suffix,rtf = rtfOn)
+        return(filename)
+    }
+    # now = format(Sys.time(), "%m%d_%H%M_")
+    # filename <- ifelse(
+    #   "2021" %in% year,
+    #   sprintf("frtab_inc2021_%s.png", now),
+    #   sprintf("frtab_no2021_%s.png", now)
+    # )
+    # filename2 <- sprintf("fr_tab_%s_%s.rtf", now, suffix)
+    # filename2 <- make_fname("fr_tab", suffj)
+    # pr %>% gt::gtsave(filename=filename, path="analysis/", vwidth=1200, vheight=800)
+    # pr %>% gt::gtsave(filename=filename2, path="analysis/", vwidth=1200, vheight=800)
+    return(list(fr_mat1, fr_mat2))
 }
 
 plot_predictors <- function(resp, dat, vars,
