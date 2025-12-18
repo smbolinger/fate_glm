@@ -52,7 +52,9 @@ source("missing_data.R")
 ```{r load-data, echo=FALSE, message=FALSE}
   # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
   # filename <- paste0(homeDir,read_file(paste0(homeDir, "cleaned_data/import_name.txt")))
-filename <- read_file(params$data_file)
+# filename <- read_file(params$data_file)
+filename <- "cleaned_data/grouped_0805_1225_ed2_20250906_1658.csv"
+# filename <- "cleaned_data/grouped_0805_1225_ed2_20250905_1302.csv"
 cat("importing from:",filename,"\n\n")
 # nData <- read_csv(filename)[-1]
 nData <- read_csv(filename) # To run python code, need reticulate package.
@@ -72,14 +74,21 @@ nData$nest_age <- nData$nest_age3
 ```
 
 
-```{r filter-data}
+```{r filter-data-2, eval=FALSE, include=FALSE}
+print_pred(nData)
+table(nData$field_fate, useNA="ifany")
+```
+
+
+```{r filter-data-3}
 nd <- nData %>%
   filter(nest!=20365) %>%  # found on hatch day
   filter( nest!=20259) %>% # NA for final_obs_int (not tracked to fate)
   filter_dat1(cam_vect=cam_str, debug=params$debug,  # filters for cam by default
               grouped=grouped, spp=spp_sel, sites=sites_sel)
 rm(nData)
-
+print_pred(nd)
+table(nd$field_fate, useNA="ifany")
 ```
 
 How many NAs should there be in (camera) nest fate?
@@ -105,6 +114,7 @@ if(FALSE){
   ndGLM1 %>% select(nest, species, field_fate, cam_fate, fate, cfate, hatchfail, c_hatchfail, HF_mis, is_u) %>% write.csv(paste0("fates",now,".csv"))
 }
 print_vars(ndGLM1)
+print_pred(ndGLM1)
 # saveRDS(ndGLM1, "dataframes/ndGLM1.rds")
 saveRDS(ndGLM1, "ndGLM1.rds")
 # saveRDS(nd, "nd.rds")
