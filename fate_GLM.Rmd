@@ -277,6 +277,7 @@ print_vars(ndGLM_cc)
 datName      <- "ndGLM_cc"
 saveRDS(ndGLM_cc, "dataframes/ndGLM_cc.rds")
 write.csv(ndGLM_cc, "dat_complete.csv")
+saveRDS(ndGLM_cc, "dat_complete.rds")
 # }
 str(ndGLM_cc)
 if(centered){ # remove the unscaled/uncentered dfs, but already saved in case needed
@@ -348,6 +349,7 @@ cat("\n\nRESPONSE VAR:",resp, "\n\n")
 ```{r q1_fit, warning=FALSE}
 # mods <- run_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
 mods <- fit_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
+saveRDS(mods, "fit_isu.rds")
 ```
 ### CREATE AIC TABLES AND REGRESSION TABLES:
 
@@ -412,6 +414,7 @@ cat("\n\nRESPONSE VAR:",resp,"\n\nMODELS:\n")
 
 ```{r q2_fit, echo=TRUE}
 mods <- fit_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
+saveRDS(mods, "fit_hfm.rds")
 saveRDS(mods, "dataframes/mods.rds")
 saveRDS(modList, "dataframes/modList.rds")
 # mods <- run_models(dataMod=dat, resp=resp, met="brglm2", modlist=modList)
