@@ -88,6 +88,7 @@ refactor <- function(ndGLM1, num_fate){
   # nestData$cam_fate[nestData$cam_fate == "Ca"] = "Hu"
   ndGLM1$cam_fate[ndGLM1$cam_fate == "Ca"] = "Hu"
   ndGLM1$cam_fate = factor(ndGLM1$cam_fate, levels = c("H", "D", "A", "F", "Hu", "S"))
+  ndGLM1$species = factor(ndGLM1$species, levels = c("LETE", "CONI"))
   # nestData$cfate[nestData$cfate == "Ca"] = "Hu"
   cat("combine Ca with Hu:\n")
   print(table(ndGLM1$cam_fate))

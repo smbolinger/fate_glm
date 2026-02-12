@@ -1,0 +1,58 @@
+---
+title: "cleaning_extra"
+author: "Sarah Bolinger"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+Are there any extra columns left over that don't have observations?
+
+I needed to remove the last six columns, so I simply put their indices
+into the code below to be extra sure I was getting the correct columns:
+
+```{r eval=FALSE, include=FALSE}
+# cols <- c(125:130)        # indices of columns for removal
+#cols <- c(133, 134, 136, 137)        # indices of columns for removal
+cols <- c()
+names(nestdata[cols])
+```
+
+If it looks correct, remove the columns. Then check the names to see
+what columns are left.
+
+```{r eval=FALSE, include=FALSE}
+nestdata <- nestdata[,-cols] 
+names(nestdata)   # are you tired of looking at column names yet??
+```
+
+If you want to compare the unique strings before and after column replacement:
+
+```{r}
+uniqueStr2 <- vector()          # vector to fill with unique strings
+for(col in colIndex) uniqueStr2 <- append(uniqueStr2, unique(nestdata[col]))
+uniqueStr2 <- unlist(uniqueStr2)
+uniqueUnique2 <- unique(uniqueStr2)
+stringE_after <- str_detect(uniqueUnique2, "[0-9][:LETTER:]")
+stringNoE_after  <- uniqueUnique2[stringE_after == F]
+write(stringNoE_after, sprintf("output/unique_noE_after%s.txt", now))
+# this should match to what we end up with after extraction
+```
+
+After repelacing columns:
+Now, as a precaution, we will count the unique strings and total number
+of observations in the dataframe post-extraction and compare it to the
+values we got before (which we stored as obsPerCol and totalObs)
+
+```{r}
+obsPCAfter  <- colSums(!is.na(nestdata[,colIndex])) # total per column
+totObsAfter <- sum(obsPCAfter)                      # total observations
+
+differ <- obsPerCol == obsPCAfter
+# comparing befor and after, which columns differ in the number of observations that == NA?
+diffC <- which(differ==F) # ooo, it has names, that is cool
+```
+
+diffC (length 15):
+j_10 j_34 j_35 j_42 j_53 j_55 j_58 j_65 j_67 j_68 j_69 j_70 j_71 j_84 j_94 
+   1   23   24   31   42   44   47   54   56   57   58   59   60   73   83 

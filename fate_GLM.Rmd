@@ -82,14 +82,14 @@ library(tidyverse)
 # old_code.Rmd also has packages used in older versions of the script
 ```
 
-### b. Create functions
+### b. Import functions
 
 ```{r functions, echo=TRUE}
 # source("imp_sim_functions.R")
-source("missing_data.R")
-source("fit_models.R")
-source("visualize_data.R")
-source("edit_model_data.R")
+source("functions/missing_data.R")
+source("functions/fit_models.R")
+source("functions/visualize_data.R")
+source("functions/edit_model_data.R")
 # source("filter_dat.r")
 # source("UHF_fateGLM.R")
 ```

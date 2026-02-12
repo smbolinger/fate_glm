@@ -38,10 +38,10 @@ rtfOn <- params$rtf
 ```
 
 ```{r, include=FALSE}
-source("edit_model_data.R") # load functions
+source("functions/edit_model_data.R") # load functions
 source("fateGLM_settings.R")
-source("visualize_data.R")
-source("missing_data.R")
+source("functions/visualize_data.R")
+source("functions/missing_data.R")
 ```
 
 
