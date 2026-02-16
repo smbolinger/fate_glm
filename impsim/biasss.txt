@@ -1,0 +1,180 @@
+, , m1, is_u
+
+                           avgBias avgPctBias covRate   avgWidth
+nest_age              0.0022615207  0.7683528   0.954 0.25104769
+cam_fateD             0.0168921559  0.7809411   0.968 2.49997458
+cam_fateA             0.0050086601  1.1232634   0.962 4.00505363
+cam_fateF             0.0695078515  2.2812130   0.972 3.47675576
+cam_fateHu            0.0423902142  3.7040276   0.950 2.62413598
+cam_fateS             0.2132816237 42.9055249   0.954 4.92731505
+speciesCONI           0.0382552195  1.0704709   0.970 9.14818297
+speciesCONI:nest_age -0.0041394216  2.1078273   0.972 0.46966382
+speciesCONI:obs_int             NA         NA      NA         NA
+obs_int               0.0066368880  5.8601128   0.968 0.54761068
+fdate                 0.0003961836  1.5847590   0.948 0.04876481
+
+, , m8, is_u
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
+, , m16, is_u
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
+, , m1, HF_mis
+
+                           avgBias avgPctBias covRate   avgWidth
+nest_age              0.0016359266  0.9783563   0.954 0.21201208
+cam_fateD            -0.0150822878  0.4511708   0.970 2.68639701
+cam_fateA            -0.0458804462  1.2231507   0.958 2.99646715
+cam_fateF            -0.6603001145 84.9655897   0.924 5.62722741
+cam_fateHu           -0.0557963540  1.2251996   0.952 3.05483021
+cam_fateS             0.0608902866  1.0738209   0.964 4.91103257
+speciesCONI           0.1912415490  6.2482633   0.964 8.22636040
+speciesCONI:nest_age -0.0122013385  7.9168755   0.970 0.45200579
+speciesCONI:obs_int             NA         NA      NA         NA
+obs_int               0.0023148670  0.8282629   0.940 0.58157645
+fdate                 0.0004461226  1.0917821   0.958 0.05291101
+
+, , m8, HF_mis
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
+, , m16, HF_mis
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
+, , m1, is_u
+
+                           avgBias avgPctBias covRate   avgWidth
+nest_age              0.0022615207  0.7683528   0.954 0.25104769
+cam_fateD             0.0168921559  0.7809411   0.968 2.49997458
+cam_fateA             0.0050086601  1.1232634   0.962 4.00505363
+cam_fateF             0.0695078515  2.2812130   0.972 3.47675576
+cam_fateHu            0.0423902142  3.7040276   0.950 2.62413598
+cam_fateS             0.2132816237 42.9055249   0.954 4.92731505
+speciesCONI           0.0382552195  1.0704709   0.970 9.14818297
+speciesCONI:nest_age -0.0041394216  2.1078273   0.972 0.46966382
+speciesCONI:obs_int             NA         NA      NA         NA
+obs_int               0.0066368880  5.8601128   0.968 0.54761068
+fdate                 0.0003961836  1.5847590   0.948 0.04876481
+
+, , m8, is_u
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
+, , m16, is_u
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
+, , m1, HF_mis
+
+                           avgBias avgPctBias covRate   avgWidth
+nest_age              0.0016359266  0.9783563   0.954 0.21201208
+cam_fateD            -0.0150822878  0.4511708   0.970 2.68639701
+cam_fateA            -0.0458804462  1.2231507   0.958 2.99646715
+cam_fateF            -0.6603001145 84.9655897   0.924 5.62722741
+cam_fateHu           -0.0557963540  1.2251996   0.952 3.05483021
+cam_fateS             0.0608902866  1.0738209   0.964 4.91103257
+speciesCONI           0.1912415490  6.2482633   0.964 8.22636040
+speciesCONI:nest_age -0.0122013385  7.9168755   0.970 0.45200579
+speciesCONI:obs_int             NA         NA      NA         NA
+obs_int               0.0023148670  0.8282629   0.940 0.58157645
+fdate                 0.0004461226  1.0917821   0.958 0.05291101
+
+, , m8, HF_mis
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
+, , m16, HF_mis
+
+                     avgBias avgPctBias covRate avgWidth
+nest_age                  NA         NA      NA       NA
+cam_fateD                 NA         NA      NA       NA
+cam_fateA                 NA         NA      NA       NA
+cam_fateF                 NA         NA      NA       NA
+cam_fateHu                NA         NA      NA       NA
+cam_fateS                 NA         NA      NA       NA
+speciesCONI               NA         NA      NA       NA
+speciesCONI:nest_age      NA         NA      NA       NA
+speciesCONI:obs_int       NA         NA      NA       NA
+obs_int                   NA         NA      NA       NA
+fdate                     NA         NA      NA       NA
+
