@@ -3,6 +3,9 @@
 /references
 /analysis
 /figures
+/tables
+/nest_data
+/dataframes
 # Files
 #*.txt
 *.docx
