@@ -1,0 +1,86 @@
+
+One could simply sort by year to account for the fact that there are
+nests with the same ID number in multiple years, but I added a prefix to
+nest ID for each year to differentiate them (from earliest to latest
+year: "10", "20", and "30", with extra zero-padding to make all nest
+numbers the same length)
+
+Enter the names of the columns you know you want to remove into the
+vector "rmNames" below. 
+You do not have to enter the names of any blank
+columns added during import - there is a separate command below that
+targets those - just the names of the user-generated columns in Excel.
+
+I also went ahead and moved the year column from the very end of the
+dataframe to a spot just before the observations, so it is with the rest
+of the nest info.
+
+You could make the code chunk below into two chunks to check the names
+in between. Or you could add the first removal line to the dplyr
+expression (with appropriate formatting) to simplify the code.
+
+I renamed the columns in Excel to remove spaces, but you can use column
+name repair to do this in R.
+
+@line 117:
+Don't worry, there's more fiddly data cleaning to come, but the
+  fiddliest parts are behind us.
+
+Column names in the Excel file are dates, representing days that nest
+surveys occurred. The code below uses regular expressions (regex) to
+extract the date strings for each column name. This gives us a list of
+observation dates, and assigning the indices for these columns to
+colIndex allows us to easily target just the observation columns by
+using data[,colIndex]
+
+As is, the code extracts day-month; the commented code also extracts
+year.
+
+If the new columns look good on visual inspection, go ahead and run the
+extraction command:
+
+start @ line 602:
+# when reading in the file, some observations have the "E" removed from them
+# I think it's just when read_csv guess the coltypes - whichever columns have 
+# observations in the first few rows get interpreted as numeric 
+# just have to specify the type in the col_types argument
+
+
+observation strings:
+
+# #stringsNoE <- str_remove(uniqueUnique, "[0-9][:LETTER:]") # just removes part of string, not whole row where pattern is found
+
+
+replacing columns:
+
+    # write only relevant cells to the file
+    # want to ignore NAs in oldCol, in case NAs intoduced in new col
+    
+After you type in the strings, use str_extract() to extract the relevant
+bits. Don't use str_extract_all() - it will look for all matches within
+a given string ("all" doesn't refer to all the strings but all the
+matches within the string).
+
+We want one match per string.
+
+The code tells R to print the values of each observation column before
+and after extraction so you can compare them.
+
+"Not" captures the following: "could not find", "not found", "could not locate", "not located", "did not check", "nothing"
+
+A couple have single letters instead of words; F, Hu, 
+
+"wet chick" bc one observation is "adult with chicks - cam"
+
+Or maybe just make all the unique non-egg non-chick strings into a list for extraction 
+
+D and DNL/DNF are going to conflict - it will just extract "D" for all of them
+
+How to tell R to look for "D" with and without other characters after it?
+
+which cols are OK to be NA after extraction? [39,40,59,61,74,76,99]
+I don't see the NAs it says are there in cols 75, 77
+also don't know where the extra 7 obs excluded come from.
+
+    # avoid warnings by not printing col names
+    # but with col.names = F, you get "New names:" for each df

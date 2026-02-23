@@ -367,23 +367,29 @@ make_fname <- function( name, suffix, extension, nowDigits="long"){
   fname <- paste0(paste(name, suffix, now, sep="_"), extension)
   return(fname)
 }
+nm  <- function(x) deparse(substitute(x))
+  # nm  <- function(x) rlang::as_label(rlang::enexpr(x)) 
 ############## SAVE TABLES ###############################################
 save_tab <- function(tab, dpi=(1800/6), outdir, suffix="", rtf=FALSE){
+  tabName <- substitute(tab)
 
   # now = format(Sys.time(), "_%m%d_%H%M%S") # seconds bc tables all generated in < 1 min
-  nm  <- function(x) deparse(substitute(x)) 
+  # nm  <- function(x) deparse(substitute(x)) 
+  # nm  <- function(x) rlang::as_label(rlang::enexpr(x)) 
   # tab <- get(tabName)
   # dpi      <- (1800/6)                          # img width (px) / desired img width (in)
   if(rtf){
     # file_name <- paste0(nm(tab), suffix, now, ".rtf") # name of tab will always be tab within the function?
     # file_name <- make_fname(tabName, suffix, ".rtf", nowDigits="short")
-    file_name <- make_fname(nm(tab), suffix, ".rtf", nowDigits="short")
+    # file_name <- make_fname(nm(tab), suffix, ".rtf", nowDigits="short")
+    file_name <- make_fname(deparse(tabName), suffix, ".rtf", nowDigits="short")
     # gt::gtsave(tab, file_name, path=paste0(dir,"out/"))
     gt::gtsave(tab, file_name, path=paste0(outdir,"tables/"))
   }
 
   # file_name1 <- paste0(nm(tab), now, suffix, ".png")
-  file_name1 <- make_fname(nm(tab), suffix, ".png", nowDigits="short")
+  # file_name1 <- make_fname(nm(tab), suffix, ".png", nowDigits="short")
+  file_name1 <- make_fname(deparse(tabName), suffix, ".png", nowDigits="short")
   # gt::gtsave(tab, file_name1, path=paste0(dir,"out/"))
   gt::gtsave(tab, file_name1, path=paste0(outdir,"tables/"))
   

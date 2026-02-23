@@ -30,7 +30,8 @@ paste(quest, fVar, sep="_")
 suffix = paste(quest,fVar,  sep="_")
 
 aicTab <- unname(mods) %>% aic_mod()
-fname <- aicTab %>% save_tab(suffix=suffix, outdir = homeDir, rtf=TRUE)
+# fname <- aicTab %>% save_tab(suffix=suffix, outdir = homeDir, rtf=TRUE) # pipes make deparse(substitute) not work
+fname <- save_tab(aicTab, suffix=suffix, outdir = homeDir, rtf=TRUE)
 cat("creating AIC table; filename =",fname)
 
 # knitr::include_graphics(paste0(homeDir,"tables/",fname), 
@@ -62,7 +63,7 @@ set_gtsummary_theme(my_theme)
 if(FALSE){
   m<-5
 }
-numMods <- 2
+numMods <- 4
 modNames <- as.list(modnames(mods)) # list of models in the order they were specified
 for(m in 1:numMods){
   mod  <- aicTab$`_data`$`__GT_ROWNAME_PRIVATE__`[m]

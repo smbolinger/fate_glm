@@ -1,0 +1,287 @@
+
+# > mice::is.mids
+is.mids <-  function (x) 
+{
+  inherits(x, "mids")
+}
+# <bytecode: 0x0000029113e13780>
+#   <environment: namespace:mice>
+
+#####################################################################################
+
+# > mice:::rm.whitespace
+rm.whitespace <- function (string, side = "both") 
+{
+  side <- match.arg(side, c("left", "right", "both"))
+  pattern <- switch(side, left = "^\\s+", right = "\\s+$", 
+                    both = "^\\s+|\\s+$")
+  sub(pattern, "", string)
+}
+# <bytecode: 0x00000291311b1000>
+#   <environment: namespace:mice>
+
+#####################################################################################
+
+mice.theme <- function (transparent = TRUE, alpha.fill = 0.3) 
+{
+  filler <- function(transparent, alpha) {
+    if (transparent) {
+      return(c(grDevices::hcl(240, 100, 40, alpha), grDevices::hcl(0,  100, 40, alpha)))
+    }
+    return(c(grDevices::hcl(240, 100, 40), grDevices::hcl(0,  100, 40)))
+  }
+  if (missing(transparent)) 
+    transparent <- supports.transparent()
+  if (missing(alpha.fill)) 
+    alpha.fill <- ifelse(transparent, 0.3, 0)
+  list(superpose.symbol = list(col = mdc(1:2),
+                               fill = filler(transparent,  alpha.fill),
+                               pch = 1),
+       fontsize = list(text=22),
+       superpose.line = list(col = mdc(4:5),
+       # superpose.line = list(col = alpha(mdc(4:5), 0.5),
+                             lwd = 2
+                             ),
+       box.dot = list(col = mdc(1:2)),
+       box.rectangle = list(col = mdc(4:5)), 
+       box.symbol = list(col = mdc(1:2)),
+       plot.symbol = list(col = mdc(1:2),  
+                          fill = filler(transparent, alpha.fill),
+                          pch = 1), 
+       plot.line = list(col = mdc(4:5)),
+       superpose.polygon = list(col = filler(transparent,  alpha.fill)),
+       strip.background = list(col = "grey95"), 
+       mice = list(flag = TRUE))
+}
+# <bytecode: 0x00000291311a8540>
+#   <environment: namespace:mice>
+#####################################################################################
+
+# > mice::supports.transparent
+supports.transparent <- function () 
+{
+  query <- grDevices::dev.capabilities("semiTransparency")$semiTransparency
+  if (is.na(query)) {
+    query <- FALSE
+  }
+  query
+}
+# <bytecode: 0x00000291311ac758>
+  # <environment: namespace:mice>
+
+#####################################################################################
+mdc <- function (r = "observed", s = "symbol", transparent = TRUE,
+                 cso = grDevices::hcl(240,  100, 40, 0.7),
+                 csi = grDevices::hcl(0, 100, 40, 0.7),
+                 csc = "gray50",
+                 # clo = grDevices::hcl(240, 100, 40, 0.8),
+                 clo = grDevices::hcl(240, 100, 40, 0.5),
+                 # cli = grDevices::hcl(0,  100, 40, 0.8),
+                 cli = grDevices::hcl(0,  100, 40, 0.5),
+                 clc = "gray50") 
+{
+  if (missing(transparent)) {
+    if (!supports.transparent()) {
+      cso <- grDevices::hcl(240, 100, 40)
+      csi <- grDevices::hcl(0, 100, 40)
+      csc <- "black"
+      clo <- grDevices::hcl(240, 100, 40)
+      cli <- grDevices::hcl(0, 100, 40)
+      clc <- "black"
+    }
+  }
+  else if (!transparent) {
+    cso <- grDevices::hcl(240, 100, 40)
+    csi <- grDevices::hcl(0, 100, 40)
+    csc <- "black"
+    clo <- grDevices::hcl(240, 100, 40)
+    cli <- grDevices::hcl(0, 100, 40)
+    clc <- "black"
+  }
+  fallback <- grDevices::palette()[1]
+  if (is.numeric(r)) {
+    idx <- floor(r)
+    idx[r < 1 | r > 6] <- 7
+    myc <- c(cso, csi, csc, clo, cli, clc, fallback)[idx]
+    return(myc)
+  }
+  rc <- pmatch(r, c("observed", "missing", "both"))
+  sc <- pmatch(s, c("symbol", "line"))
+  idx <- rc + (sc - 1) * 3
+  idx[is.na(idx)] <- 7
+  myc <- c(cso, csi, csc, clo, cli, clc, fallback)[idx]
+  myc
+}
+# <bytecode: 0x000002913112cb68>
+#   <environment: namespace:mice>
+
+#####################################################################################
+#####################################################################################
+
+if(FALSE){
+  x <- impInt
+  na.groups = NULL
+  groups = NULL
+  panel = lattice::lattice.getOption("panel.densityplot")
+  default.prepanel = lattice::lattice.getOption("prepanel.default.densityplot")
+  allow.multiple = TRUE
+  thicker = 2.5
+  outer = TRUE
+  drop.unused.levels = lattice::lattice.getOption("drop.unused.levels")
+  subscripts = TRUE
+  as.table = TRUE
+  plot.points = FALSE
+  subset = TRUE
+  mayreplicate = TRUE
+  theme = mice.theme()
+  xl    = xlabels
+  dots <- list()
+  
+}
+
+#####################################################################################
+
+xlabels <- c("nest_age" = "NEST_AGE",
+             "cam_fate" = "TRUE_FATE")
+
+# > mice:::densityplot.mids
+# density_plot<- function (x, data, na.groups = NULL, groups = NULL, as.table = TRUE, 
+missing_plot<- function (x, data, plType, na.groups = NULL, groups = NULL, as.table = TRUE, 
+          plot.points = FALSE, theme = mice.theme(), mayreplicate = TRUE, 
+          thicker = 2.5, allow.multiple = TRUE, outer = TRUE, drop.unused.levels = lattice::lattice.getOption("drop.unused.levels"), 
+          panel = lattice::lattice.getOption("panel.densityplot"), 
+          default.prepanel = lattice::lattice.getOption("prepanel.default.densityplot"), 
+          ..., subscripts = TRUE, subset = TRUE, xl = xlabels) 
+{
+  call <- match.call()
+  
+  if (!is.mids(x)) 
+    stop("Argument 'x' must be a 'mids' object")
+  
+  cd <- data.frame(complete(x, "long", include = TRUE))
+  r <- as.data.frame(is.na(x$data))
+  
+  nagp <- eval(expr = substitute(na.groups), envir = r, enclos = parent.frame())
+  if (is.expression(nagp)){ 
+    nagp <- eval(expr = nagp, envir = r, enclos = parent.frame())
+  }
+  
+  ngp <- eval(expr = substitute(groups), envir = cd, enclos = parent.frame())
+  if (is.expression(ngp)) {
+    ngp <- eval(expr = ngp, envir = cd, enclos = parent.frame())
+    }
+  groups <- ngp
+  
+  ss <- eval(expr = substitute(subset), envir = cd, enclos = parent.frame())
+  if (is.expression(ss)) {
+    ss <- eval(expr = ss, envir = cd, enclos = parent.frame())
+    }
+  subset <- ss
+  
+  dots <- list(...)
+#####################################################################################
+  args <- list(panel = panel, default.prepanel = default.prepanel, 
+               allow.multiple = allow.multiple, outer = outer, drop.unused.levels = drop.unused.levels, 
+               subscripts = subscripts, as.table = as.table, plot.points = plot.points)
+#####################################################################################
+  args_xy <- list(allow.multiple = allow.multiple, outer = outer,
+               drop.unused.levels = drop.unused.levels, subscripts = subscripts,
+               as.table=as.table)
+#####################################################################################
+  vnames <- setdiff(names(cd), c(".id", ".imp"))
+  allfactors <- unlist(lapply(cd[vnames], is.factor))
+  
+  if (missing(data)) {
+    vnames <- vnames[!allfactors & x$nmis > 2 & x$nmis < 
+                       nrow(x$data) - 1]
+    formula <- as.formula(paste("~", paste(vnames, collapse = "+", 
+                                           sep = ""), sep = ""))
+  } else {
+    formula <- data
+  }
+  
+  form <- lattice::latticeParseFormula(model = formula, data = cd, 
+                                       subset = subset, groups = groups, multiple = allow.multiple, 
+                                       outer = outer, subscripts = TRUE, drop = drop.unused.levels)
+  
+  xnames <- unlist(lapply(strsplit(form$right.name, " \\+ "), 
+                          rm.whitespace))
+  nona <- is.null(call$na.groups)
+  if (!is.null(call$groups) && nona) {
+    gp <- call$groups
+  } else {
+    if (nona) {
+      for (i in seq_along(xnames)) {
+        xvar <- xnames[i]
+        select <- cd$.imp != 0 & !r[, xvar]
+        cd[select, xvar] <- NA
+      }
+      gp <- rep.int(cd$.imp, length(xnames)) # replicate values
+    }
+    else {
+      for (i in seq_along(xnames)) {
+        xvar <- xnames[i]
+        select <- cd$.imp != 0 & !nagp
+        cd[select, xvar] <- NA
+      }
+      gp <- rep.int(cd$.imp, length(xnames))
+    }
+  }
+  
+  mustreplicate <- !(!is.null(call$groups) && nona) && mayreplicate
+  if (mustreplicate) {
+    # theme$superpose.line$col <- rep(theme$superpose.line$col[seq_len(2)], # sequence of length 2
+                                    # c(1, x$m))
+    # theme$superpose.line$col <- c("deepskyblue2", grDevices::colorRampPalette(c("coral","orangered4"))(x$m))
+    # theme$superpose.line$col <- c("deepskyblue2", grDevices::colorRampPalette(c("lightsalmon","orangered4"))(x$m))
+    # theme$superpose.line$col <- c("deepskyblue2", grDevices::colorRampPalette(c("burlywood1","orangered4"))(x$m))
+    # theme$superpose.line$col <- c("deepskyblue2",alpha( grDevices::colorRampPalette(c("burlywood1","orangered4"))(x$m), 0.5))
+    theme$superpose.line$col <- c("deepskyblue2",alpha( grDevices::colorRampPalette(c("pink","orangered4"))(x$m), 0.4))
+    # theme$superpose.line$col <- alpha(col, 0.5)
+    theme$superpose.line$lwd <- rep(c(theme$superpose.line$lwd[1] * 
+                                        thicker, theme$superpose.line$lwd[1]), c(1, x$m))
+    theme$superpose.symbol$col <- rep(theme$superpose.symbol$col[seq_len(2)], 
+                                      c(1, x$m))# repeat the first one 1x, and the 2nd one m times
+    theme$superpose.symbol$pch <- c(NA, 49:(49 + x$m - 1))
+  }
+  
+  if (is.null(call$xlab)) {
+    args$xlab <- ""
+    if (length(xnames) == 1) 
+      # args$xlab <- xnames
+      args$xlab <- xl[xnames]
+  
+  }
+  if (is.null(call$scales)) {
+    args$scales <- list()
+    if (length(xnames) > 1) {
+      args$scales <- list(x = list(relation = "free"), 
+                          y = list(relation = "free"))
+    }
+  }
+  
+  args <- c(x = formula, data = list(cd), groups = list(gp), 
+            args, dots, subset = call$subset)
+  if(plType=="density"){
+    tp <- do.call(lattice::densityplot, args)
+    tp <- update(tp, par.settings = theme)
+  }else if(plType=="xy"){
+    tp <- do.call(lattice::densityplot, args_xy)
+    tp <- update(tp, par.settings = theme)
+  }else{
+    cat("invalid plType")
+    return(c("invalid pl Type:", plType))
+  }
+  return(tp)
+}
+# tp
+# <bytecode: 0x0000029131ab47d0>
+#   <environment: namespace:mice>
+
+
+
+#####################################################################################
+### Call the function
+#####################################################################################
+
+density_plot(impInt)

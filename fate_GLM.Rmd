@@ -22,9 +22,9 @@ params:
   resp2: "HF_mis"
   imp: "all"
   n_run: 500 
-  imp_met: "pmm"
+  imp_met: ""
   home_dir: "/home/wodehouse/projects/fate_glm/"
-  data_file: "ndGLM1.rds"
+  data_file: "dataframes/ndGLM1.rds"
 ---
 
   data_file: "dataframes/ndGLM1_field_fate9_final_obs_int3_final_obs_date2.rds"
@@ -140,6 +140,7 @@ str(ndGLM_)
 if (FALSE) ndGLM_ %>% sapply(function(x) sum(is.na(x)))
 ndGLM_$misclass[is.na(ndGLM_$misclass)] = 0  # there are sometimes weird missing values
 ndGLM_miss <- dat_miss(ndGLM1) # moved this elsewhere because it is used there
+if(!exists("dataframes")) dir.create("dataframes")
 saveRDS(ndGLM_, "dataframes/ndGLM_.rds")
 ```
 
@@ -252,7 +253,7 @@ ndGLM_ %>%
   select(nest, is_u, HF_mis, misclass, species, cfate, cam_fate, nest_age, fdate, obs_int) %>%
   mutate(spcs = ifelse(species=="LETE", 0, 1)) %>%
   mutate(across(all_of(predictors), function(x) as.numeric(scale(x,scale=F)))) %>%
-  write.csv("dat_num.csv", row.names=FALSE)
+  # write.csv("dat_num.csv", row.names=FALSE)
 
 # I think I did this so they would become factors automatically, but now I have to make 
 # them back into 0-1 and still keep them as factors, which may take the same amt of code?
@@ -261,7 +262,7 @@ ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = if_else(is_u==1, "yes", "no"),
 # ndGLM_scl_cc_1 <- ndGLM_scl_cc %>% mutate(is_u = ifelse(is_u==1, "yes", "no"))
 # ff_num <- str_extract(ff_val, "\\d+")
 # write.csv(ndGLM_scl_cc_1, sprintf("dat_complete_ff%s.csv",ff_num), row.names=FALSE)
-write.csv(ndGLM_scl_cc_1, "dat_complete.csv", row.names=FALSE)
+# write.csv(ndGLM_scl_cc_1, "dat_complete.csv", row.names=FALSE)
 
 ```
 
@@ -276,8 +277,8 @@ ndGLM_cc <- ndGLM_  %>%
 print_vars(ndGLM_cc)
 datName      <- "ndGLM_cc"
 saveRDS(ndGLM_cc, "dataframes/ndGLM_cc.rds")
-write.csv(ndGLM_cc, "dat_complete.csv")
-saveRDS(ndGLM_cc, "dat_complete.rds")
+# write.csv(ndGLM_cc, "dat_complete.csv")
+saveRDS(ndGLM_cc, "other/imp_sim/dat_complete.rds")
 # }
 str(ndGLM_cc)
 if(centered){ # remove the unscaled/uncentered dfs, but already saved in case needed
@@ -349,7 +350,7 @@ cat("\n\nRESPONSE VAR:",resp, "\n\n")
 ```{r q1_fit, warning=FALSE}
 # mods <- run_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
 mods <- fit_models(dataMod=dat, resp=resp, met=metReg, modlist=modList)
-saveRDS(mods, "fit_isu.rds")
+# saveRDS(mods, "fit_isu.rds")
 ```
 ### CREATE AIC TABLES AND REGRESSION TABLES:
 

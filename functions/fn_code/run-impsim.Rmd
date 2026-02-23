@@ -1,0 +1,19 @@
+---
+title: "r-run-impsim"
+author: "Sarah Bolinger"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Look at various ecological datasets to look for patterns in the missing data**
+```{r}
+deb_new <- TRUE
+nrun_new <- 3
+mnew <- 5
+source("fateGLM_impsim.R")
+```
+

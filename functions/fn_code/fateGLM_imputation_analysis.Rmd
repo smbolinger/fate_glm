@@ -1,110 +1,48 @@
 ---
-title: "Untitled"
+title: "imputation analysis"
 author: "Sarah Bolinger"
 date: "`r Sys.Date()`"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-#########################################################################################
-## Run all of these once:
-
-### Functions
-
-#### Basic mice functionality: impute, fit, pool
+#### Remove values from the data to test the efficiency of the imputation 
 
 ```{r, warning=FALSE}
-source("functions/mice_functions.R")
+# source("GLM_ampute.R")
+
+# suppress_warnings()
+# suppressWarnings()
+mod <- modList[1]
+var_list <-  c("nest_age", "cam_fateD", "cam_fateA", "cam_fateF", "cam_fateHu", "cam_fateS", "speciesLETE", "speciesLETE:nest_age")
+bias_names <- c("bias", "pctBias", "covRate", "avgWidth", "RMSE")
+met_list <- c("pmm", "rf", "cart")
+# nrun  <-500
+# if(typ=="test"){
+#   met_list <- c("pmm", "rf")
+#   nrun <- 2
+# }else if (typ=="norm"){
+#   nrun <- 500
+#   met_list <- c("pmm", "rf", "cart")
+# }
+# resp is passed from fate_GLM1
 ```
 
-#### Functions to create interaction plots including imputed data:
 
 ```{r, warning=FALSE}
-# source("imp_interaction_plot.R")
-```
-
-#### Function to create the pooled regression table for the top model:
-
-```{r, warning=FALSE}
-# source("imp_reg_tab.R")
-source("functions/other_imp.R")
-```
-
-#### Functions to make simulated NAs & impute,etc. to test the imputation method being used
-
-```{r}
-source("functions/imp_sim_functions.R")
-# source("suppress_warnings.R")
-```
-
-### OPTIONAL:
-#### Create a small set of imputations (m=10) for testing code (does not run during knitting)
-
-```{r eval=FALSE, include=FALSE, warning=FALSE}
-# source("small_imputation.R")
-small_imp()
-```
-
-#### How many imputations?
-
-```{r eval=FALSE, warning=FALSE, include=FALSE}
-modList
-impDatTest <- mice::mice(imppDat, m=20, method='pmm', printFlag=FALSE)
-# fitTest    <- with(impDatTest, glm())
-fitTest <- impFit(impDatTest, modList = modList)
-howManyImp <- lapply(fitTest, function(x) howManyImputations::how_many_imputations(x, cv=0.05))
-```
-
-## .
-#########################################################################################
-## Run all of these for each separate analysis:
-
-### Create imputed datasets (m=30)
-
-Select the variables to impute and create a "shadow matrix"
-
-```{r}
-
-# col_sel <- c(prVars, "HF_mis", "is_u") # columns to select, as strings
-# col_sel <- c(prVars, resp1, resp2) # columns to select, as strings
-col_sel <- c(prVars,resp) # columns to select, as strings
-cat(">> columns selected for imputation:", col_sel)
-# do 1 response at a time, since they are correlated
-# col_sel
-# met     <- "pmm"
-
-# dat4imp <- get(datNameImp) %>% select(all_of(col_sel)) %>% naniar::bind_shadow() 
-dat4imp <- get(datNameImp) %>% select(all_of(col_sel))
-d4i_shadow <- naniar::as_shadow(dat4imp)
-# %>% mice::md.pattern()
-
-# impInt <- impStrat(datNameImp, met="pmm", col_sel)
-# impInt <- impStrat(datNameImp, met=impMet, col_sel, debug=TRUE)
-impInt <- imputeDat(datNameImp, met=impMet, cols=col_sel, seed = 61389, m = 30, complete = FALSE, debug=TRUE)
-impInt$loggedEvents
-
-# impMets <- impInt$method
-# impMets
-# impMets[2] <- ""
-```
-
-### DIAGNOSTICS
-
-#### Plots
-These functions are from mice_plots.R
-
-```{r}
-# mice::densityplot(impInt)
-# density_plot(impInt)
-imp_plot(impInt, plType = "density")
+# Create the simulated data with NAs (using the complete-case df):
+sim_dat <- mkSimDat(nd = ndGLM_scl_cc, method = "amp", wt = TRUE, debug = TRUE, convFact = TRUE)
+missing_tab("sim_dat",prVars)
+# imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=500)
+imp_sim <- runSim(datNA = sim_dat$amp,mets = met_list, resp = resp, vars = var_list, mod = mod, nruns=nrun)
+# saveRDS(imp_sim, "imp_sim_20oct.rds")
+bias_out <- parAvg(fullDat = ndGLM_scl_cc, impDat = imp_sim,resp = resp,vars = var_list, mod = mod,mets = met_list, biasVals = bias_names)
+write.csv(bias_out, file = "bias_vals.csv")# write to csv in case script aborts 
 
 ```
-
-```{r}
-# mice::xyplot(impInt, nest_age ~ fdate)
-imp_plot(impInt, nest_age ~ fdate, plType="xy")
-```
-
 
 ### AIC Analysis - Settings
 
@@ -120,16 +58,12 @@ if(exists("nfate")) fVar <- paste0("_",nfate,"fates") # exists seems to be more 
 ```
 
 
-```{r}
-cat("* * * * * * * * * * * * * * * * * * * * * * * * * * * *",
-    str_pad(paste("\n*\timputation using this data:", datNameImp), 46, "right"),
-    "*",
-    str_pad(paste("\n*\tand this response variable:", resp), 46, "right"),
-    "*",
-    str_pad(paste("\n*\tand this method:", regMet), 46, "right"),
-    "*",
-    "\n* * * * * * * * * * * * * * * * * * * * * * * * * * * *"
-    )
+```{r, results='asis'}
+cat("* * * * * * * * * * * * * * * * * * * * * * * * * * * *")
+cat(str_pad(paste("\n*\timputation using this data:", datNameImp), 46, "right"), "*")
+cat(str_pad(paste("\n*\tand this response variable:", resp), 46, "right"), "*")
+cat(str_pad(paste("\n*\tand this method:", regMet), 46, "right"), "*")
+cat("\n* * * * * * * * * * * * * * * * * * * * * * * * * * * *")
 ```
 
 ### Fit & pool the results
@@ -239,4 +173,3 @@ source("imp_int_q1.R")
 ```{r eval=FALSE, include=FALSE, warning=FALSE}
 source("imp_int_q2.R")
 ```
-
